@@ -1,0 +1,64 @@
+---
+title: "Análisis GSE113834"
+subtitle: "Análisis Datos Ómicos - PEC 1"
+author: "Jorge Vallejo Ortega"
+date: '`r format(Sys.Date(),"%e de %B, %Y")`'
+output:
+  pdf_document:
+      toc: true
+      #pandoc_args: -V toc-title="Sumario"
+# Next code for knitting both types of documents automatically comes from https://stackoverflow.com/questions/39662365/knit-one-markdown-file-to-two-output-files/53280491#53280491
+knit: (function(inputFile, encoding) {
+  rmarkdown::render(inputFile, encoding = encoding,
+  output_format = "all",
+  output_dir = "results") })
+# And:
+# https://stackoverflow.com/a/46007686/10647267
+
+---
+
+```{r setup, include=FALSE}
+# knitr options
+knitr::opts_chunk$set(echo = FALSE)
+
+# This is a try:
+knitr::opts_knit$set(stop_on_error = 2L)
+# See ?evaluate::evaluate
+# What I am trying to do is to make knitr stop
+# when an error is found instead of running the
+# complete script.
+```
+
+```{r delete results files, eval= FALSE}
+# Run this chunk ONLY if you want to re-do
+# all the report FROM ZERO.
+# Remember that the .RData files are there to
+# avoid unnecesarily redoing long data processing.
+
+# file.remove(c("./results/clasificacion-radiografias.html"))
+
+
+```
+
+
+```{r libraries, include=FALSE}
+# Install packages
+# Load packages
+# ...
+
+library(knitr)
+
+```
+
+# Apéndice A: Reproducibilidad
+```{r session_info, include=TRUE, echo=TRUE, results='markup'}
+sessionInfo() # For better reproducibility
+```
+
+
+
+
+
+
+
+
