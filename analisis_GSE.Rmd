@@ -29,6 +29,33 @@ knitr::opts_knit$set(stop_on_error = 2L)
 # complete script.
 ```
 
+```{r estructura de directorios}
+# Directory for raw data
+if (!(dir.exists("data"))){
+dir.create("data")
+}
+# Directory for results
+if (!(dir.exists("results"))){
+  dir.create("results")
+}
+```
+
+```{r prepare data, eval=FALSE}
+GSE_address <- "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE113834"
+data_origin <- "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE113834"
+
+# De-compress files
+cel_tar <- "data/GSE113834_RAW.tar"
+untar(cel_tar, exdir = "data")
+file.remove(cel_tar)
+zip_files <- dir("data")
+sapply(zip_files, function(x){
+  system2("gunzip",
+          args = c("-d", paste0("data/", x)))
+  })
+```
+
+
 ```{r delete results files, eval= FALSE}
 # Run this chunk ONLY if you want to re-do
 # all the report FROM ZERO.
