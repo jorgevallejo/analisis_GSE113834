@@ -113,15 +113,42 @@ library(Biobase)
 my.targets <- read.AnnotatedDataFrame(file.path("intermediateResults", "targets2.csv"), header = TRUE, row.names=1, sep = ";")
 # Construct the ExpressionSet object
 library(primeviewprobe)
-rawData <- read.celfiles(celFiles, phenoData = my.targets, pkgname="primeviewprobe")
+library(oligoClasses)
+rawData <- read.celfiles(celFiles, phenoData = my.targets, pkgname="primeviewcdf")
 ```
 
 ```{r construct ExpressionSet with GEOquery}
 library(GEOquery)
-gse <- getGEO("GSE113834", GSEMatrix = TRUE, AnnotGPL = TRUE)
+GEOfile <- "intermediateResults/gse.RData"
+if(file.exists(GEOfile)){
+  load(GEOfile)
+}else{
+gse <- getGEO("data/GSE113834_series_matrix.txt.gz", GSEMatrix = TRUE, destdir="data", getGPL = TRUE)
 # The value is a list of ExpressionSet objects
 # (each GSM is one of those ExpressionSet objects)
+save("gse", file="intermediateResults/gse.RData")
+}
+gse_expr <- unlist(gse[[1]])
 ```
+Probemos otro método para construir el objeto ExpressionSet:
+```{r ExpressionSet con affy, eval=FALSE}
+library(affy)
+rawData <- read.affybatch(filenames = celFiles,
+                          phenoData = my.targets)
+```
+
+
+
+# Control de calidad de los datos en bruto
+Con el control de calidad pretendemos averiguar si los datos en bruto tienen calidad suficiente para continuar con el análisis, antes de normalizarlos.
+
+En esta ocasión usaremos el paquete de análisis ArrayQualityMetrics.
+
+```{r control de calidad con ArrayQualityMetrics}
+library(arrayQualityMetrics)
+arrayQualityMetrics(gse_expr)
+```
+
 
 
 # Apéndice A: Reproducibilidad
