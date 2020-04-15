@@ -38,6 +38,10 @@ dir.create("data")
 if (!(dir.exists("results"))){
   dir.create("results")
 }
+# Directory for processed data
+if (!(dir.exists("intermediateResults"))){
+  dir.create("intermediateResults")
+}
 ```
 
 ```{r prepare data, eval=FALSE}
@@ -53,6 +57,23 @@ sapply(zip_files, function(x){
   system2("gunzip",
           args = c("-d", paste0("data/", x)))
   })
+
+# Generate targets file
+# initial_target_file.csv is a copy-paste from the GSE webpage to LibreOffice Calc
+# savec as a csv file.
+targets <- read.csv2("data/initial_target_file.csv", header = FALSE, stringsAsFactors = FALSE)
+# Add Condition column
+targets$Condicion <- as.factor(sub("-[[:print:]]+", "", targets[,2]))
+# Add Material column
+targets$Material <- as.factor(sub("[[:graph:]]+[[:blank:]]", "", targets[,2]))
+# Add Group column
+targets$Grupo <- as.factor(paste(targets$Condicion, targets$Material, sep="-"))
+# Rearrange columns
+targets <- targets[, c(1, 5, 3, 4, 2)]
+# Change column names
+colnames(targets)[c(1, 5)] <- c("Archivo", "Abreviado")
+# Write final targets file
+write.csv2(targets, file = "intermediateResults/targets2.csv", row.names = FALSE)
 ```
 
 
@@ -76,6 +97,32 @@ sapply(zip_files, function(x){
 library(knitr)
 
 ```
+
+Grupos experimentales (columna grupos)
+Condición del sujeto (condición)
+Material usado (material)
+Número total de muestras:
+
+
+```{r construct ExpressionSet object, eval=FALSE}
+# Read the CEL files
+library('oligo')
+celFiles <- list.celfiles("data", full.names=TRUE)
+# Generate phenoData
+library(Biobase)
+my.targets <- read.AnnotatedDataFrame(file.path("intermediateResults", "targets2.csv"), header = TRUE, row.names=1, sep = ";")
+# Construct the ExpressionSet object
+library(primeviewprobe)
+rawData <- read.celfiles(celFiles, phenoData = my.targets, pkgname="primeviewprobe")
+```
+
+```{r construct ExpressionSet with GEOquery}
+library(GEOquery)
+gse <- getGEO("GSE113834", GSEMatrix = TRUE, AnnotGPL = TRUE)
+# The value is a list of ExpressionSet objects
+# (each GSM is one of those ExpressionSet objects)
+```
+
 
 # Apéndice A: Reproducibilidad
 ```{r session_info, include=TRUE, echo=TRUE, results='markup'}
