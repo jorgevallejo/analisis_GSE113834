@@ -165,7 +165,8 @@ Los gráficos de densidad nos informan acerca de la forma y posición de las se�
 
 ```{r grafico de densidad}
 hist(rawData, col = graph_colours,
-     main="Signal distribution")
+     main="Densidad de la señal en bruto",
+     ylab="Densidad", xlab= "log Intensidad")
 
 legend(x=11.9, y=0.31, legend=pData(rawData)$X.Abreviado, fill=graph_colours, ncol=2, bty="n",
        cex=0.5)
@@ -186,6 +187,29 @@ boxplot(rawData,
 ```
 
 Podemos ver que ninguna de las muestras destaca entre el resto. Hay pequeñas variaciones, pero es una característica esperable cuando comparamos los datos de intensidad en bruto.
+
+## Dendrograma del clúster jerárquico
+
+El dendrograma nos ayuda a representar cómo se agrupan las muestras, y da pistas acerca de cuál es el factor experimental que determina las diferencias entre muestras. Aquellas muestras con datos más similares aparecerán agrupadas.
+
+```{r dendrograma, fig.height=5, fig.width=8}
+# Calcular matriz de distancias
+if(file.exists("intermediateResults/dist_matrix.RData")){
+  load("intermediateResults/dist_matrix.RData")
+  }else{
+    dist_matrix <- dist(t(exprs(rawData)))
+    save(dist_matrix, file = "intermediateResults/dist_matrix.RData")
+  }
+# Cambia el atributo 'Labels' con los nombres abreviados de las muestras.
+attr(dist_matrix, "Labels")<- pData(rawData)$X.Abreviado
+
+hier_clust <- hclust(dist_matrix, "average")
+
+plot(hier_clust, main="Dendrograma de datos muestrales en bruto",
+     hang = -1, cex = 0.66, xlab= "Samples", sub="", ylab = "", yaxt="n")
+```
+
+En este caso y a primera vista no parece haber un factor claro que haga que unas muestras están más cercanas entre sí que otras. Quizá el material (input/wash/eluted) en primer lugar, y el grupo (ctrl/asd) en segundo lugar; pero no es definitivo.
 
 # Apéndice A: Reproducibilidad
 ```{r session_info, include=TRUE, echo=TRUE, results='markup'}
