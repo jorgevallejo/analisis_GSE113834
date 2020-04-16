@@ -154,6 +154,21 @@ library(arrayQualityMetrics)
 arrayQualityMetrics(gse_expr)
 ```
 
+```{r}
+graph_colours <- c(rep("red", 3), rep("blue", 3), rep("yellow",3),
+                rep("green", 3))
+```
+
+
+## Gráficos de densidad
+
+Los gráficos de densidad...
+
+```{r grafico de densidad}
+
+```
+
+
 ## Diagrama de cajas
 
 El gráfico de diagrama de cajas nos permite comparar la distribución de la intensidad entre las diferentes muestras.
@@ -162,8 +177,7 @@ El gráfico de diagrama de cajas nos permite comparar la distribución de la int
 boxplot(rawData,
         names=pData(rawData)$X.Abreviado,
         cex.axis=0.5, las=2, which="both",
-        col = c(rep("red", 3), rep("blue", 3), rep("yellow",3),
-                rep("green", 3)),
+        col = graph_colours,
         main="Distribución de valores de intensidad en bruto")
 ```
 
