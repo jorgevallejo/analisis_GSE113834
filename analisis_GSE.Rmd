@@ -211,6 +211,50 @@ plot(hier_clust, main="Dendrograma de datos muestrales en bruto",
 
 En este caso y a primera vista no parece haber un factor claro que haga que unas muestras están más cercanas entre sí que otras. Quizá el material (input/wash/eluted) en primer lugar, y el grupo (ctrl/asd) en segundo lugar; pero no es definitivo.
 
+## Componentes principales
+
+El análisis de componentes principales nos puede servir para detectar si las muestras se agrupan con otras muestras procedentes del mismo grupo o si no hay correspondencia entre muestras del mismo grupo.
+
+```{r funcion plotPCA3}
+
+# Función para visualización de componentes principales
+# Código adaptado de Statistical Analysis of Microarray data (adapted for teaching purposes) Based on Gonzalo, Ricardo and Sanchez-Pla, Alex (2019)
+
+ library(ggplot2)
+ library(ggrepel)
+ plotPCA3 <- function (datos, labels, factor, title, scale,colores, size = 1.5, glineas = 0.25) {
+   data <- prcomp(t(datos),scale=scale)
+   # plot adjustments
+   dataDf <- data.frame(data$x)
+   Group <- factor
+   loads <- round(data$sdev^2/sum(data$sdev^2)*100,1)
+   # main plot
+   p1 <- ggplot(dataDf,aes(x=PC1, y=PC2)) +
+     theme_classic() +
+     geom_hline(yintercept = 0, color = "gray70") +
+     geom_vline(xintercept = 0, color = "gray70") +
+     geom_point(aes(color = Group), alpha = 0.55, size = 3) +
+     coord_cartesian(xlim = c(min(data$x[,1])-5,max(data$x[,1])+5)) +
+     scale_fill_discrete(name = "Grupo")
+   # avoiding labels superposition
+   p1 + geom_text_repel(aes(y = PC2 + 0.25, label = labels),segment.size = 0.25, size = size) + 
+     labs(x = c(paste("PC1",loads[1],"%")),y=c(paste("PC2",loads[2],"%"))) +  
+     ggtitle(paste("Análisis de componentes principales para: ",title,sep=" "))+ 
+     theme(plot.title = element_text(hjust = 0.5)) +
+     scale_color_manual(values=colores)
+}
+```
+
+```{r componentes ppales}
+plotPCA3(exprs(rawData), labels = pData(rawData)$X.Abreviado, factor = pData(rawData)$X.Grupo, title="Datos brutos", scale = FALSE, size = 3, colores = rainbow(6))
+```
+
+De forma similar a lo que veíamos en el dendrograma, las diferencias más importantes entre las muestras parecen deberse al material antes que al grupo.
+
+La componente más importante explica el 67.7% de la variabilidad total de las muestras, y parece deberse principalmente al material; las muestras "wash" se agrupan más a la izquierda, compartiendo la zona central con las muestras "input", y las muestras "eluted" agrupadas hacia la derecha del gráfico.
+
+La muestra "CTRL-1 INPUT" aparece alejada, no sólo de las otras muestras del grupo CTRL-INPUT, sino de todo el resto de muestras. Esto por sí sólo no significa que la muestra sea defectuosa, pero sí que deberíamos fijarnos en ella y comprobar qué resultados obtiene en el resto de gráficos.
+
 # Apéndice A: Reproducibilidad
 ```{r session_info, include=TRUE, echo=TRUE, results='markup'}
 sessionInfo() # For better reproducibility
