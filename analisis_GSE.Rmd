@@ -155,19 +155,23 @@ arrayQualityMetrics(gse_expr)
 ```
 
 ```{r}
-graph_colours <- c(rep("red", 3), rep("blue", 3), rep("yellow",3),
-                rep("green", 3))
+graph_colours <- rainbow(length(rawData))
 ```
 
 
 ## Gráficos de densidad
 
-Los gráficos de densidad...
+Los gráficos de densidad nos informan acerca de la forma y posición de las señales sin normalizar.
 
 ```{r grafico de densidad}
+hist(rawData, col = graph_colours,
+     main="Signal distribution")
 
+legend(x=11.9, y=0.31, legend=pData(rawData)$X.Abreviado, fill=graph_colours, ncol=2, bty="n",
+       cex=0.5)
 ```
 
+Este caso vemos que la curva de densidad es similar en todas las muestras, sin mostrar grandes diferencias.
 
 ## Diagrama de cajas
 
