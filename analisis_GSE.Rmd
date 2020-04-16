@@ -151,7 +151,7 @@ En esta ocasión usaremos el paquete de análisis ArrayQualityMetrics.
 
 ```{r control de calidad con ArrayQualityMetrics}
 library(arrayQualityMetrics)
-arrayQualityMetrics(gse_expr)
+arrayQualityMetrics(rawData)
 ```
 
 ```{r}
@@ -254,6 +254,24 @@ De forma similar a lo que veíamos en el dendrograma, las diferencias más impor
 La componente más importante explica el 67.7% de la variabilidad total de las muestras, y parece deberse principalmente al material; las muestras "wash" se agrupan más a la izquierda, compartiendo la zona central con las muestras "input", y las muestras "eluted" agrupadas hacia la derecha del gráfico.
 
 La muestra "CTRL-1 INPUT" aparece alejada, no sólo de las otras muestras del grupo CTRL-INPUT, sino de todo el resto de muestras. Esto por sí sólo no significa que la muestra sea defectuosa, pero sí que deberíamos fijarnos en ella y comprobar qué resultados obtiene en el resto de gráficos.
+
+## Imagen del array
+
+Examinar la imagen del array nos permite hacer una evaluación de calidad a nivel "macro". Nos permite hacer una estimación a ojo de características como del balance del color, la uniformidad en la hibridación y en los spots, de si el background es mayor de lo normal y de la existencia de artefactos como el polvo o pequeñas marcas (rasguños).
+
+```{r imagen del array}
+library(affyPLM)
+# Generate PLMset
+if(file.exists("intermediateResults/Pset.RData")){
+  load("intermediateResults/Pset.RData")
+  }else{
+    Pset <- fitPLM(rawData)
+    save(Pset, file="intermediateResults/Pset.RData")
+  }
+
+#pseudo image of the weights for the first array in the dataset
+image(Pset, which=1, main=noquote(Pset@phenoData@data$X.Abreviado.[1]))
+```
 
 # Apéndice A: Reproducibilidad
 ```{r session_info, include=TRUE, echo=TRUE, results='markup'}
