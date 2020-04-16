@@ -117,7 +117,7 @@ library(oligoClasses)
 rawData <- read.celfiles(celFiles, phenoData = my.targets, pkgname="primeviewcdf")
 ```
 
-```{r construct ExpressionSet with GEOquery}
+```{r construct ExpressionSet with GEOquery, eval=FALSE}
 library(GEOquery)
 GEOfile <- "intermediateResults/gse.RData"
 if(file.exists(GEOfile)){
@@ -131,7 +131,7 @@ save("gse", file="intermediateResults/gse.RData")
 gse_expr <- unlist(gse[[1]])
 ```
 Probemos otro método para construir el objeto ExpressionSet:
-```{r ExpressionSet con affy, eval=FALSE}
+```{r ExpressionSet con affy}
 library(affy)
 rawData <- read.affybatch(filenames = celFiles,
                           phenoData = my.targets)
@@ -149,6 +149,10 @@ library(arrayQualityMetrics)
 arrayQualityMetrics(gse_expr)
 ```
 
+```{r boxplot}
+boxplot(rawData,
+        names=pData(rawData)$X.Abreviado)
+```
 
 
 # Apéndice A: Reproducibilidad
