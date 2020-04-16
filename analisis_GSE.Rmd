@@ -106,13 +106,16 @@ Material usado (material)
 Número total de muestras:
 
 
-```{r construct ExpressionSet object, eval=FALSE}
+```{r construct targets file, eval=FALSE}
 # Read the CEL files
 library('oligo')
 celFiles <- list.celfiles("data", full.names=TRUE)
 # Generate phenoData
 library(Biobase)
 my.targets <- read.AnnotatedDataFrame(file.path("intermediateResults", "targets2.csv"), header = TRUE, row.names=1, sep = ";")
+```
+
+```{r Expression Set with read.celfiles, eval=FALSE}
 # Construct the ExpressionSet object
 library(primeviewprobe)
 library(oligoClasses)
@@ -151,11 +154,20 @@ library(arrayQualityMetrics)
 arrayQualityMetrics(gse_expr)
 ```
 
+## Diagrama de cajas
+
+El gráfico de diagrama de cajas nos permite comparar la distribución de la intensidad entre las diferentes muestras.
+
 ```{r boxplot}
 boxplot(rawData,
-        names=pData(rawData)$X.Abreviado)
+        names=pData(rawData)$X.Abreviado,
+        cex.axis=0.5, las=2, which="both",
+        col = c(rep("red", 3), rep("blue", 3), rep("yellow",3),
+                rep("green", 3)),
+        main="Distribución de valores de intensidad en bruto")
 ```
 
+Podemos ver que ninguna de las muestras destaca entre el resto. Hay pequeñas variaciones, pero es una característica esperable cuando comparamos los datos de intensidad en bruto.
 
 # Apéndice A: Reproducibilidad
 ```{r session_info, include=TRUE, echo=TRUE, results='markup'}
