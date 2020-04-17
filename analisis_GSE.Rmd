@@ -85,7 +85,10 @@ write.csv2(targets, file = "intermediateResults/targets2.csv", row.names = FALSE
 # Remember that the .RData files are there to
 # avoid unnecesarily redoing long data processing.
 
-# file.remove(c("./results/clasificacion-radiografias.html"))
+file.remove(c("./intermediateResults/dist_matrix.RData",
+              "./intermediateResults/gse.RData",
+              "./intermediateResults/Pset.RData",
+              "./intermediateResults/targets2.csv"))
 
 
 ```
