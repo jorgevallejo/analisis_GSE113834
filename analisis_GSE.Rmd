@@ -282,6 +282,20 @@ A simple vista no se observa ningún gran defecto como roturas, burbujas o manch
 
 Antes de empezar el análisis de expresión es necesario procesar los datos brutos de forma que los datos de las diferentes muestras (micorarrays) sean comparables. El proceso de normalización intenta asegurarse de que las diferencias de intensidad reflejen la expresión diferencial de los genes, eliminando sesgos producidos por razones técnicas.
 
+El método de normalización que usaremos en este análisis es el RMA (_robust multi-array
+average_), que es uno de los más usados en el ecosistema de Bioconductor.
+
+```{r normalizacion RMA}
+# First checks if the expressionset has been already calculated and saved
+eset_rma_file <- file.path("intermediateResults", "eset_rma.RData")
+
+if(file.exists(eset_rma_file)){
+  load(eset_rma_file)
+}else{
+  eset_rma <- affy::rma(rawData)
+  save(eset_rma, file = eset_rma_file)
+}
+```
 
 
 # Apéndice A: Reproducibilidad
