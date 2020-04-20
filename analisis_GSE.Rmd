@@ -46,7 +46,7 @@ if (!(dir.exists("intermediateResults"))){
 
 ```{r prepare data, eval=FALSE}
 GSE_address <- "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE113834"
-data_origin <- "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE113834"
+data_origin <- "https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE113834&format=file"
 
 # De-compress files
 cel_tar <- "data/GSE113834_RAW.tar"
@@ -59,8 +59,8 @@ sapply(zip_files, function(x){
   })
 
 # Generate targets file
-# initial_target_file.csv is a copy-paste from the GSE webpage to LibreOffice Calc
-# savec as a csv file.
+# initial_target_file.csv is a copy-paste of the samples/group table
+# from the GSE webpage to LibreOffice Calc and saved as a csv file.
 targets <- read.csv2("data/initial_target_file.csv", header = FALSE, stringsAsFactors = FALSE)
 # Remove trailing spaces in sample names
 targets$V1 <- sub("[[:blank:]]", "", targets$V1)
@@ -152,13 +152,14 @@ Con el control de calidad pretendemos averiguar si los datos en bruto tienen cal
 
 En esta ocasión usaremos el paquete de análisis ArrayQualityMetrics.
 
-```{r control de calidad con ArrayQualityMetrics}
+```{r control de calidad con ArrayQualityMetrics, eval=FALSE}
 library(arrayQualityMetrics)
 arrayQualityMetrics(rawData)
 ```
 
-```{r}
-graph_colours <- rainbow(length(rawData))
+```{r re-used variables}
+array_labels <- noquote(pData(rawData)$X.Abreviado.)
+graph_colours <- rainbow(length(array_labels))
 ```
 
 
@@ -171,8 +172,8 @@ hist(rawData, col = graph_colours,
      main="Densidad de la señal en bruto",
      ylab="Densidad", xlab= "log Intensidad")
 
-legend(x=11.9, y=0.31, legend=pData(rawData)$X.Abreviado, fill=graph_colours, ncol=2, bty="n",
-       cex=0.5)
+legend(x=11.9, y=0.31, legend=pData(rawData)$X.Abreviado, 
+       fill=graph_colours, ncol=2, bty="n", cex=0.5)
 ```
 
 Este caso vemos que la curva de densidad es similar en todas las muestras, sin mostrar grandes diferencias.
@@ -209,7 +210,7 @@ attr(dist_matrix, "Labels")<- pData(rawData)$X.Abreviado
 hier_clust <- hclust(dist_matrix, "average")
 
 plot(hier_clust, main="Dendrograma de datos muestrales en bruto",
-     hang = -1, cex = 0.66, xlab= "Samples", sub="", ylab = "", yaxt="n")
+     hang = -1, cex = 0.66, xlab= "Muestras", sub="", ylab = "", yaxt="n")
 ```
 
 En este caso y a primera vista no parece haber un factor claro que haga que unas muestras están más cercanas entre sí que otras. Quizá el material (input/wash/eluted) en primer lugar, y el grupo (ctrl/asd) en segundo lugar; pero no es definitivo.
@@ -249,7 +250,9 @@ El análisis de componentes principales nos puede servir para detectar si las mu
 ```
 
 ```{r componentes ppales}
-plotPCA3(exprs(rawData), labels = pData(rawData)$X.Abreviado, factor = pData(rawData)$X.Grupo, title="Datos brutos", scale = FALSE, size = 3, colores = rainbow(6))
+plotPCA3(exprs(rawData), labels = pData(rawData)$X.Abreviado,
+         factor = pData(rawData)$X.Grupo, title="Datos brutos",
+         scale = FALSE, size = 3, colores = rainbow(6))
 ```
 
 De forma similar a lo que veíamos en el dendrograma, las diferencias más importantes entre las muestras parecen deberse al material antes que al grupo.
@@ -262,19 +265,19 @@ La muestra "CTRL-1 INPUT" aparece alejada, no sólo de las otras muestras del gr
 
 Examinar la imagen del array nos permite hacer una evaluación de calidad a nivel "macro". Nos permite hacer una estimación a ojo de características como del balance del color, la uniformidad en la hibridación y en los spots, de si el background es mayor de lo normal y de la existencia de artefactos como el polvo o pequeñas marcas (rasguños).
 
-```{r imagen del array}
-library(affyPLM)
-# Generate PLMset
-if(file.exists("intermediateResults/Pset.RData")){
-  load("intermediateResults/Pset.RData")
-  }else{
-    Pset <- fitPLM(rawData)
-    save(Pset, file="intermediateResults/Pset.RData")
-  }
 
-#pseudo image of the weights for the first array in the dataset
-image(Pset, which=1, main=noquote(Pset@phenoData@data$X.Abreviado.[1]))
+```{r array image, fig.height=4, fig.width=12}
+#pseudo image of the weights for the first arrays in the dataset
+par(mfrow=c(1,3))
+image(rawData[,1:3])
+dev.off()
 ```
+
+# Normalización de los datos
+
+Antes de empezar el análisis de expresión es necesario procesar los datos brutos de forma que los datos de las diferentes muestras (micorarrays) sean comparables. El proceso de normalización intenta asegurarse de que las diferencias de intensidad reflejen la expresión diferencial de los genes, eliminando sesgos producidos por razones técnicas.
+
+
 
 # Apéndice A: Reproducibilidad
 ```{r session_info, include=TRUE, echo=TRUE, results='markup'}
