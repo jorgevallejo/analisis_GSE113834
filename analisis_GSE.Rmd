@@ -172,7 +172,7 @@ hist(rawData, col = graph_colours,
      main="Densidad de la señal en bruto",
      ylab="Densidad", xlab= "log Intensidad")
 
-legend(x=11.9, y=0.31, legend=pData(rawData)$X.Abreviado, 
+legend(x=11.9, y=0.31, legend=array_labels, 
        fill=graph_colours, ncol=2, bty="n", cex=0.5)
 ```
 
@@ -184,7 +184,7 @@ El gráfico de diagrama de cajas nos permite comparar la distribución de la int
 
 ```{r boxplot}
 boxplot(rawData,
-        names=pData(rawData)$X.Abreviado,
+        names=array_labels,
         cex.axis=0.5, las=2, which="both",
         col = graph_colours,
         main="Distribución de valores de intensidad en bruto")
@@ -205,7 +205,7 @@ if(file.exists("intermediateResults/dist_matrix.RData")){
     save(dist_matrix, file = "intermediateResults/dist_matrix.RData")
   }
 # Cambia el atributo 'Labels' con los nombres abreviados de las muestras.
-attr(dist_matrix, "Labels")<- pData(rawData)$X.Abreviado
+attr(dist_matrix, "Labels")<- array_labels
 
 hier_clust <- hclust(dist_matrix, "average")
 
@@ -246,11 +246,11 @@ El análisis de componentes principales nos puede servir para detectar si las mu
      ggtitle(paste("Análisis de componentes principales para: ",title,sep=" "))+ 
      theme(plot.title = element_text(hjust = 0.5)) +
      scale_color_manual(values=colores)
-}
+ }
 ```
 
 ```{r componentes ppales}
-plotPCA3(exprs(rawData), labels = pData(rawData)$X.Abreviado,
+plotPCA3(exprs(rawData), labels = array_labels,
          factor = pData(rawData)$X.Grupo, title="Datos brutos",
          scale = FALSE, size = 3, colores = rainbow(6))
 ```
@@ -270,7 +270,6 @@ Examinar la imagen del array nos permite hacer una evaluación de calidad a nive
 #pseudo image of the weights for the first arrays in the dataset
 par(mfrow=c(1,3))
 image(rawData[,1:3])
-dev.off()
 ```
 
 # Normalización de los datos
