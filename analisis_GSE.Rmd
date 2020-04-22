@@ -47,6 +47,7 @@ if (!(dir.exists("intermediateResults"))){
 ```{r prepare data, eval=FALSE}
 GSE_address <- "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE113834"
 data_origin <- "https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE113834&format=file"
+gpl_origin <- "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?mode=raw&is_datatable=true&acc=GPL15207&id=17536&db=GeoDb_blob169"
 
 # De-compress files
 cel_tar <- "data/GSE113834_RAW.tar"
@@ -138,6 +139,11 @@ save("gse", file="intermediateResults/gse.RData")
 }
 gse_expr <- unlist(gse[[1]])
 ```
+```{r}
+gse <- getGEO("GSE113834", GSEMatrix = TRUE, destdir = "data", getGPL = TRUE)
+```
+
+
 Probemos otro método para construir el objeto ExpressionSet:
 ```{r ExpressionSet con affy}
 library(affy)
@@ -337,6 +343,50 @@ En conclusión, podríamos decir que la normalización de los datos ha producido
 
 En una primera selección de genes, dejaremos fuera aquellos genes que varían poco entre condiciones, y aquellos para los que no disponemos de anotación.
 
+```{r read GPL15207 table}
+# This chunk reads the GPL15207 data from the file
+# data/GPL15207-17536.txt
+# Such file has been previously downloaded from the
+# address stored in the variable gpl_origin
+
+# Read the lines of the file
+gpl_text <- readLines("data/GPL15207-17536.txt")
+# Identify the line just before the headers line
+# This will be used as the starting point for read.table()
+start_row <- grep("#SPOT_ID =", gpl_text)
+
+gpl_table_file <- "intermediateResults/gpl_table.RData"
+
+if(file.exists(gpl_table_file)){
+  load(gpl_table_file)
+}else{
+  gpl_table <- read.table("data/GPL15207-17536.txt", sep = "\t",
+                        skip = start_row,
+                        colClasses = "character", 
+                        stringsAsFactors = FALSE,
+                        header = TRUE, fill = TRUE,
+                        quote="", comment.char = "")
+  save(gpl_table, file = gpl_table_file)
+}
+
+# Create table with probeID and EntrezID
+gpl_entrezid <- gpl_table[,c("ID", "Entrez.Gene")]
+```
+
+```{r filtraje a mano}
+# Make a dataframe combining probeID, IQR, and EntrezID
+IQR_set <- apply(exprs(eset_rma), 1, IQR)
+IQR_dataframe <- as.data.frame(IQR_set)
+colnames(IQR_dataframe) <- c("IQR")
+IQR_combined <- merge(IQR_dataframe, gpl_entrezid,
+                      by.x = 0, by.y = "ID")
+
+# Filter out Affymetrix QC probes
+QCprobes <- grep("^AFF", IQR_combined$Row.names)
+IQR_noprobes <- IQR_combined[-QCprobes, ]
+```
+
+
 ```{r filtraje no especifico, eval=FALSE}
 library('genefilter')
 library('primeviewprobe')
@@ -352,7 +402,7 @@ filtered <- nsFilter(eset_rma, require.entrez = FALSE,
 # duplicados ni el filtraje de sondas sin código Entrez.
 ```
 
-Número inicial de sondas: `r format(nrow(exprs(eset_rma)), big.mark= " "`
+Número inicial de sondas: `r format(nrow(exprs(eset_rma)), big.mark= " ")`
 
 Sondas excluidas por baja variabilidad: `r format(filtered$filter.log$numLowVar), big.mark= " "`
 Sondas excluidas por ser controles de calidad del chip: `r format(filtered$filter.log$feature.exclude), big.mark= " "`
