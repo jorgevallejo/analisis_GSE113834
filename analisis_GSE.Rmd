@@ -333,6 +333,32 @@ Un cambio notable en el diagrama de componentes es prinpales es la posición de 
 
 En conclusión, podríamos decir que la normalización de los datos ha producido el efecto esperado y no encontramos impedimento para proceder al análisis de los datos.
 
+# Filtraje no específico
+
+En una primera selección de genes, dejaremos fuera aquellos genes que varían poco entre condiciones, y aquellos para los que no disponemos de anotación.
+
+```{r filtraje no especifico, eval=FALSE}
+library('genefilter')
+library('primeviewprobe')
+# annotation(eset_rma) <- "primeviewprobe"
+filtered <- nsFilter(eset_rma, require.entrez = FALSE,
+                     remove.dupEntrez = FALSE, var.func = IQR,
+                     var.cutoff = 0.5, var.filter = TRUE,
+                     filterByQuantile = TRUE, feature.exclude = "^AFFX")
+# Elimina las sondas cuyo rango interquantil (IQR) sea menor a la mediana
+# de todos los IQR.
+
+# Al no tener un paquete de anotaciones, no hemos realizado el filtraje de
+# duplicados ni el filtraje de sondas sin código Entrez.
+```
+
+Número inicial de sondas: `r format(nrow(exprs(eset_rma)), big.mark= " "`
+
+Sondas excluidas por baja variabilidad: `r format(filtered$filter.log$numLowVar), big.mark= " "`
+Sondas excluidas por ser controles de calidad del chip: `r format(filtered$filter.log$feature.exclude), big.mark= " "`
+
+Número de sondas para siguientes análisis: `r format(nrow(exprs(filtered$eset)), big.mark= " ")`
+
 # Apéndice A: Reproducibilidad
 ```{r session_info, include=TRUE, echo=TRUE, results='markup'}
 sessionInfo() # For better reproducibility
