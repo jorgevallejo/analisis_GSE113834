@@ -400,16 +400,15 @@ Probes without Entrez ID: `r length(no_entrez)`
 
 ```{r sondas para el mismo codigo Entrez}
 # Order files (descendant) for entrezId, then for IQR
-ordered_IQR <- IQR_noprobes[ order(IQR_noprobes$Entrez.Gene, 
-                                   -IQR_noprobes$IQR), ]
+ordered_IQR <- IQR_no_entrez[ order(IQR_no_entrez$Entrez.Gene, 
+                                   -IQR_no_entrez$IQR), ]
 # Make logical vector of duplicates
-dup_entrez <- duplicated(ordered_IQR)
-
-head(gpl_entrezid[ order(
-  gpl_entrezid$Entrez.Gene,
-  gpl_entrezid$ID), ])
+dup_entrez <- duplicated(ordered_IQR$Entrez.Gene)
+dup_rows <- which(dup_entrez == TRUE)
+filtered_probes <- ordered_IQR[-dup_rows, ]
 ```
 
+Probes filtered for duplication: `r sum(dup_entrez)`
 
 ```{r filtraje no especifico, eval=FALSE}
 library('genefilter')
