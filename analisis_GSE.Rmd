@@ -363,7 +363,7 @@ if(file.exists(gpl_table_file)){
   gpl_table <- read.table("data/GPL15207-17536.txt", sep = "\t",
                         skip = start_row,
                         # In the GPL table NA values are codified as "---"
-                        no.strings = "---",
+                        na.strings = "---",
                         colClasses = "character", 
                         stringsAsFactors = FALSE,
                         header = TRUE, fill = TRUE,
@@ -386,19 +386,17 @@ IQR_combined <- merge(IQR_dataframe, gpl_entrezid,
 # Filter out Affymetrix QC probes
 QCprobes <- grep("^AFF", IQR_combined$Row.names)
 IQR_noprobes <- IQR_combined[-QCprobes, ]
-
-```
-
-```{r probes without Entrez code}
-# Check if there are probes without Entrez code
-no_entrez <- sum(IQR_noprobes$Entrez.Gene == "",
-                 is.na(IQR_noprobes$Entrez.Gene),
-                 IQR_noprobes$Entrez.Gene == "---")
+# Filter out probes without Entrez ID
+    # Vector with the indexes of NA in column Entrez.Gene
+no_entrez <- which(is.na(IQR_noprobes$Entrez.Gene) == TRUE)
+IQR_no_entrez <- IQR_noprobes[-no_entrez, ]
 # Nevertheless, I know that there are probes that map to
 # two or more different EntrezIDs. I don't know how to
 # handle those cases.
 ```
-Sondas sin código Entrez: `r no_entrez`
+
+Affymetrix Quality Control probes: `r length(QCprobes)`
+Probes without Entrez ID: `r length(no_entrez)`
 
 ```{r sondas para el mismo codigo Entrez}
 # Order files (descendant) for entrezId, then for IQR
@@ -406,6 +404,10 @@ ordered_IQR <- IQR_noprobes[ order(IQR_noprobes$Entrez.Gene,
                                    -IQR_noprobes$IQR), ]
 # Make logical vector of duplicates
 dup_entrez <- duplicated(ordered_IQR)
+
+head(gpl_entrezid[ order(
+  gpl_entrezid$Entrez.Gene,
+  gpl_entrezid$ID), ])
 ```
 
 
