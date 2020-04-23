@@ -405,32 +405,24 @@ ordered_IQR <- IQR_no_entrez[ order(IQR_no_entrez$Entrez.Gene,
 # Make logical vector of duplicates
 dup_entrez <- duplicated(ordered_IQR$Entrez.Gene)
 dup_rows <- which(dup_entrez == TRUE)
-filtered_probes <- ordered_IQR[-dup_rows, ]
+nondup_probes <- ordered_IQR[-dup_rows, ]
 ```
 
 Probes filtered for duplication: `r sum(dup_entrez)`
 
-```{r filtraje no especifico, eval=FALSE}
-library('genefilter')
-library('primeviewprobe')
-# annotation(eset_rma) <- "primeviewprobe"
-filtered <- nsFilter(eset_rma, require.entrez = FALSE,
-                     remove.dupEntrez = FALSE, var.func = IQR,
-                     var.cutoff = 0.5, var.filter = TRUE,
-                     filterByQuantile = TRUE, feature.exclude = "^AFFX")
+```{r filtraje por IQR}
 # Elimina las sondas cuyo rango interquantil (IQR) sea menor a la mediana
 # de todos los IQR.
-
-# Al no tener un paquete de anotaciones, no hemos realizado el filtraje de
-# duplicados ni el filtraje de sondas sin código Entrez.
+median_IQR <- median(nondup_probes$IQR)
+filtered_probes <- nondup_probes[nondup_probes$IQR > median_IQR, ]
 ```
 
 Número inicial de sondas: `r format(nrow(exprs(eset_rma)), big.mark= " ")`
 
-Sondas excluidas por baja variabilidad: `r format(filtered$filter.log$numLowVar), big.mark= " "`
-Sondas excluidas por ser controles de calidad del chip: `r format(filtered$filter.log$feature.exclude), big.mark= " "`
+Sondas excluidas por baja variabilidad: `r format(nrow(nondup_probes)-nrow(filtered_probes), big.mark= " ")`
+Sondas excluidas por ser controles de calidad del chip: `r format(), big.mark= " "`
 
-Número de sondas para siguientes análisis: `r format(nrow(exprs(filtered$eset)), big.mark= " ")`
+Número de sondas para siguientes análisis: `r format(nrow(filtered_probes), big.mark= " ")`
 
 # Apéndice A: Reproducibilidad
 ```{r session_info, include=TRUE, echo=TRUE, results='markup'}
