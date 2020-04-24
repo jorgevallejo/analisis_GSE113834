@@ -69,8 +69,8 @@ targets$V1 <- sub("[[:blank:]]", "", targets$V1)
 targets$Condicion <- as.factor(sub("-[[:print:]]+", "", targets[,2]))
 # Add Material column
 targets$Material <- as.factor(sub("[[:graph:]]+[[:blank:]]", "", targets[,2]))
-# Add Group column
-targets$Grupo <- as.factor(paste(targets$Condicion, targets$Material, sep="-"))
+# Add Group column. Sep is a dot to make syntactically valid names
+targets$Grupo <- as.factor(paste(targets$Condicion, targets$Material, sep="."))
 # Rearrange columns
 targets <- targets[, c(1, 5, 3, 4, 2)]
 # Change column names
@@ -451,6 +451,25 @@ library(limma)
 designMat <- model.matrix(~0+targets$Grupo)
 colnames(designMat) <- levels(targets$Grupo)
 rownames(designMat) <- targets$Abreviado
+```
+
+# Contrastes
+
+Analizando la lógica, los métodos y los objetivos del estudio; los contrastes más interesantes e informativos son los que comparan el efecto grupo (CTRL vs. ASD), ya que el objeto último del estudio es comparar cerebros normales con cerebros autistas. Pero, dado que la composición de mRNA en cada material (input, wash, eluted) es diferente, tiene sentido hacer un contraste en cada uno de los materiales:
+
+CTRL vs ASD en INPUT
+CTRL vs ASD en WASH
+CTRL vs ASD en ELUTED
+
+También podría valer la pena comprobar si hay interacción entre grupo y material.
+
+```{r matriz de contrastes}
+cont.matrix <- makeContrasts(
+  CvsA.INPUT = CTRL-INPUT - ASD-INPUT,
+  CvsA.WASH = CTRL-WASH - ASD-WASH,
+  CvsA.ELUTED = CTRL-ELUTED - ASD-ELUTED,
+  INT = (CTRL-INPUT - ASD-INPUT) - (CTRL-WASH - ASD-WASH) - (CTRL-ELUTED - ASD-ELUTED),
+  levels = designMat)
 ```
 
 
