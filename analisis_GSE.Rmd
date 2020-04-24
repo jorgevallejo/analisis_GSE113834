@@ -465,13 +465,14 @@ También podría valer la pena comprobar si hay interacción entre grupo y mater
 
 ```{r matriz de contrastes}
 cont.matrix <- makeContrasts(
-  CvsA.INPUT = CTRL-INPUT - ASD-INPUT,
-  CvsA.WASH = CTRL-WASH - ASD-WASH,
-  CvsA.ELUTED = CTRL-ELUTED - ASD-ELUTED,
-  INT = (CTRL-INPUT - ASD-INPUT) - (CTRL-WASH - ASD-WASH) - (CTRL-ELUTED - ASD-ELUTED),
+  CvsA.INPUT = CTRL.INPUT - ASD.INPUT,
+  CvsA.WASH = CTRL.WASH - ASD.WASH,
+  CvsA.ELUTED = CTRL.ELUTED - ASD.ELUTED,
+  INT = (CTRL.INPUT - ASD.INPUT) - (CTRL.WASH - ASD.WASH) - (CTRL.ELUTED - ASD.ELUTED),
   levels = designMat)
 ```
 
+# Estimación del modelo
 
 # Apéndice A: Reproducibilidad
 ```{r session_info, include=TRUE, echo=TRUE, results='markup'}
