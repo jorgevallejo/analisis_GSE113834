@@ -474,6 +474,20 @@ cont.matrix <- makeContrasts(
 
 # Estimación del modelo
 
+```{r estimacion del modelo}
+fit <- lmFit(eset_filtered, designMat)
+fit.main <- contrasts.fit(fit, cont.matrix)
+fit.main <- eBayes(fit.main)
+```
+
+## Lists of differentially expressed gens
+```{r topTab lists}
+topTab_CvsA.INPUT <- topTable(fit.main, number=nrow(fit.main), coef="CvsA.INPUT",
+                              adjust="fdr")
+head(topTab_CvsA.INPUT)
+```
+
+
 # Apéndice A: Reproducibilidad
 ```{r session_info, include=TRUE, echo=TRUE, results='markup'}
 sessionInfo() # For better reproducibility
