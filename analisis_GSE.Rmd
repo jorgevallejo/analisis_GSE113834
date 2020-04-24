@@ -429,8 +429,16 @@ Número de sondas para siguientes análisis: `r format(nrow(filtered_probes), bi
 
 ```{r modify eset_rma with filtered data}
 # Merge filtered probes with expression data
+eset_filtered <- merge(exprs_eset_rma, filtered_probes$Row.names,by.x = 0, by.y = 1)
+row.names(eset_filtered) <- eset_filtered$Row.names
+eset_filtered$Row.names <- NULL
 
+save(eset_filtered, file="intermediateResults/eset_filtered.RData")
 
+# Modify eset expr with filtered data
+# filtered_exprs_matrix <- as.matrix(filtered_exprs)
+# exprs(eset_rma) <- filtered_exprs_matrix
+## No puedo o no se como hacerlo
 ```
 
 
