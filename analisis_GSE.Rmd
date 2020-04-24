@@ -441,6 +441,18 @@ save(eset_filtered, file="intermediateResults/eset_filtered.RData")
 ## No puedo o no se como hacerlo
 ```
 
+# Matriz de diseño
+
+Para el análisis de este ensayo, consideramos una matriz de diseño siguiendo un modelo de un factor con seis niveles, siendo esos niveles los grupos a los que está asignada cada muestra:
+`r unique(targets$Grupo)`
+
+```{r matriz de diseño}
+library(limma)
+designMat <- model.matrix(~0+targets$Grupo)
+colnames(designMat) <- levels(targets$Grupo)
+rownames(designMat) <- targets$Abreviado
+```
+
 
 # Apéndice A: Reproducibilidad
 ```{r session_info, include=TRUE, echo=TRUE, results='markup'}
