@@ -326,7 +326,10 @@ Si lo comparamos con el gráfico de antes de normalizar, en éste la distribuci�
 El análisis de componentes principales nos puede servir para detectar si las muestras se agrupan con otras muestras procedentes del mismo grupo o si no hay correspondencia entre muestras del mismo grupo.
 
 ```{r componentes ppales datos normalizados}
-plotPCA3(exprs(eset_rma), labels = array_labels,
+# Expression data from eset_rma will be used several times along the code
+exprs_eset_rma <- exprs(eset_rma)
+
+plotPCA3(exprs_eset_rma, labels = array_labels,
          factor = pData(eset_rma)$X.Grupo, title="Datos normalizados",
          scale = FALSE, size = 3, colores = rainbow(6))
 ```
@@ -377,7 +380,7 @@ gpl_entrezid <- gpl_table[,c("ID", "Entrez.Gene")]
 
 ```{r filtraje a mano}
 # Make a dataframe combining probeID, IQR, and EntrezID
-IQR_set <- apply(exprs(eset_rma), 1, IQR)
+IQR_set <- apply(exprs_eset_rma, 1, IQR)
 IQR_dataframe <- as.data.frame(IQR_set)
 colnames(IQR_dataframe) <- c("IQR")
 IQR_combined <- merge(IQR_dataframe, gpl_entrezid,
@@ -417,12 +420,19 @@ median_IQR <- median(nondup_probes$IQR)
 filtered_probes <- nondup_probes[nondup_probes$IQR > median_IQR, ]
 ```
 
-Número inicial de sondas: `r format(nrow(exprs(eset_rma)), big.mark= " ")`
+Número inicial de sondas: `r format(nrow(exprs_eset_rma), big.mark= " ")`
 
 Sondas excluidas por baja variabilidad: `r format(nrow(nondup_probes)-nrow(filtered_probes), big.mark= " ")`
 Sondas excluidas por ser controles de calidad del chip: `r format(), big.mark= " "`
 
 Número de sondas para siguientes análisis: `r format(nrow(filtered_probes), big.mark= " ")`
+
+```{r modify eset_rma with filtered data}
+# Merge filtered probes with expression data
+
+
+```
+
 
 # Apéndice A: Reproducibilidad
 ```{r session_info, include=TRUE, echo=TRUE, results='markup'}
