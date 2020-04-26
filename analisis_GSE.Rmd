@@ -481,12 +481,35 @@ fit.main <- eBayes(fit.main)
 ```
 
 ## Lists of differentially expressed gens
-```{r topTab lists}
+### Comparación 1 (CvsA.INPUT): Genes que cambian su expresión entre las condiciones "Control" y "ASD" detectados en muestras de ARN total (INPUT).
+```{r topTab lists CvsA.INPUT}
 topTab_CvsA.INPUT <- topTable(fit.main, number=nrow(fit.main), coef="CvsA.INPUT",
                               adjust="fdr")
 head(topTab_CvsA.INPUT)
 ```
 
+### Comparación 2 (CvsA.WASH): Genes que cambian su expresión entre las condiciones "Control" y "ASD" detectados en muestras de ARNm enriquecidas para colas poli-A cortas (WASH).
+```{r topTab lists CvsA.WASH}
+topTab_CvsA.WASH <- topTable(fit.main, number=nrow(fit.main), coef="CvsA.WASH",
+                              adjust="fdr")
+head(topTab_CvsA.WASH)
+```
+
+### Comparación 3 (CvsA.ELUTED): Genes que cambian su expresión entre las condiciones "Control" y "ASD" detectados en muestras de ARNm enriquecidas para colas poli-A largas (ELUTED).
+```{r topTab lists CvsA.ELUTED}
+topTab_CvsA.ELUTED <- topTable(fit.main, number=nrow(fit.main), coef="CvsA.ELUTED",
+                              adjust="fdr")
+head(topTab_CvsA.ELUTED)
+```
+
+### Comparación 4 (INT): Genes que cambian su expresión de forma significativa por interacción entre la condición de la muestra (CONTROL, ASD) y el material examinado (INPUT, WASH, ELUTED).
+```{r topTab lists CvsA.INPUT}
+topTab_CvsA.ELUTED <- topTable(fit.main, number=nrow(fit.main), coef="CvsA.ELUTED",
+                              adjust="fdr")
+head(topTab_CvsA.ELUTED)
+```
+
+Las tablas de este apartado son tan sólo muestras, y la primera columna contiene la ID de las sondas de Affymetrix, no códigos de genes. En el siguiente apartado llevaremos a cabo la anotación de los resultados para poder trabajar con los códigos de los genes en lugar de con las sondas.
 
 # Apéndice A: Reproducibilidad
 ```{r session_info, include=TRUE, echo=TRUE, results='markup'}
