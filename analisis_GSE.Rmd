@@ -544,6 +544,24 @@ Muestra de la tabla CvsA.INPUT anotada:
 head(anotopTab_CvsA.INPUT)
 ```
 
+# Visualización (volcanoplots)
+```{r volcanoplots, fig.height=16, fig.width=5}
+par(mfrow=c(4, 1))
+
+contrastes <- colnames(fit.main$coefficients)
+
+for (contrast in 1:length(contrastes)){
+  volcanoplot(fit.main, 
+              coef = contrastes[contrast],
+              highlight = 10, 
+              names = eval(str2expression(
+                paste0("anotopTab_", contrastes[contrast], "$Gene.Symbol"))),
+              main=paste("Genes diferencialmente expresados", contrastes[contrast],
+                         sep = "\n"))
+abline(v=c(-1,1))
+}
+```
+
 
 
 
