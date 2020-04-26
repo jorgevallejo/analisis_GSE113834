@@ -413,6 +413,15 @@ nondup_probes <- ordered_IQR[-dup_rows, ]
 
 Probes filtered for duplication: `r sum(dup_entrez)`
 
+```{r sondas con varios codigos Entrez}
+# Detect which values in column Entrez.Gene contain more than one code
+multGenes <- grep("/", nondup_probes$Entrez.Gene, value = FALSE)
+# Filter out rows with multiple entrez IDs
+nondup_probes <- nondup_probes[-multGenes, ]
+```
+
+Sondas filtradas por corresponder a más de un gen:`r format(length(multGenes), big.mark=" ")`
+
 ```{r filtraje por IQR}
 # Elimina las sondas cuyo rango interquantil (IQR) sea menor a la mediana
 # de todos los IQR.
@@ -510,6 +519,18 @@ head(topTab_CvsA.ELUTED)
 ```
 
 Las tablas de este apartado son tan sólo muestras, y la primera columna contiene la ID de las sondas de Affymetrix, no códigos de genes. En el siguiente apartado llevaremos a cabo la anotación de los resultados para poder trabajar con los códigos de los genes en lugar de con las sondas.
+
+# Anotación de los genes
+A partir de los datos extraídos de GPL15207 (gpl_table) vamos a asociar el código de cada sonda al símbolo del gen correspondiente, el nombre del gen y el código de identificación en Entrez; para cada lista de genes diferencialmente expresados.
+```{r anotar toptables}
+# Add rownames as a new PROBEID column
+geneAnots <- gpl_table[, c("ID", "Gene.Title", "Gene.Symbol", "Entrez.Gene")]
+annotated_topTab <- merge(x=geneAnots, y=topTab_CvsA.ELUTED, by.x = "ID", by.y = 0)
+```
+
+
+
+
 
 # Apéndice A: Reproducibilidad
 ```{r session_info, include=TRUE, echo=TRUE, results='markup'}
