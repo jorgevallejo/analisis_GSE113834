@@ -422,6 +422,8 @@ nondup_probes <- nondup_probes[-multGenes, ]
 
 Sondas filtradas por corresponder a más de un gen:`r format(length(multGenes), big.mark=" ")`
 
+En un caso real, me sentiría más cómodo examinando cada caso en el que una de estas sondas, correspondientes a más de un gen, aparecieran en las listas de genes diferencialmente expresados ya que pueden explicarse por secuencias pertenecientes a familias génicas muy cercanas, o por pertenecer a transcritos que 'corran' a lo largo de varios genes. En este caso, sin embargo, debido a que se trata de un ejercicio de aprendizaje, y a la limitación de tiempo, me he limitado a eliminar de la lista aquellas sondas que pueden identificar más de un gen.
+
 ```{r filtraje por IQR}
 # Elimina las sondas cuyo rango interquantil (IQR) sea menor a la mediana
 # de todos los IQR.
@@ -512,10 +514,10 @@ head(topTab_CvsA.ELUTED)
 ```
 
 ### Comparación 4 (INT): Genes que cambian su expresión de forma significativa por interacción entre la condición de la muestra (CONTROL, ASD) y el material examinado (INPUT, WASH, ELUTED).
-```{r topTab lists CvsA.INPUT}
-topTab_CvsA.ELUTED <- topTable(fit.main, number=nrow(fit.main), coef="CvsA.ELUTED",
+```{r topTab lists CvsA.INT}
+topTab_INT <- topTable(fit.main, number=nrow(fit.main), coef="INT",
                               adjust="fdr")
-head(topTab_CvsA.ELUTED)
+head(topTab_INT)
 ```
 
 Las tablas de este apartado son tan sólo muestras, y la primera columna contiene la ID de las sondas de Affymetrix, no códigos de genes. En el siguiente apartado llevaremos a cabo la anotación de los resultados para poder trabajar con los códigos de los genes en lugar de con las sondas.
@@ -523,11 +525,24 @@ Las tablas de este apartado son tan sólo muestras, y la primera columna contien
 # Anotación de los genes
 A partir de los datos extraídos de GPL15207 (gpl_table) vamos a asociar el código de cada sonda al símbolo del gen correspondiente, el nombre del gen y el código de identificación en Entrez; para cada lista de genes diferencialmente expresados.
 ```{r anotar toptables}
-# Add rownames as a new PROBEID column
+# Generate table from GPL with columns of interest
 geneAnots <- gpl_table[, c("ID", "Gene.Title", "Gene.Symbol", "Entrez.Gene")]
-annotated_topTab <- merge(x=geneAnots, y=topTab_CvsA.ELUTED, by.x = "ID", by.y = 0)
+
+anottopTap <- function(x){
+  annotated <- merge(geneAnots, x, by.x = "ID", by.y = 0)
+  return (annotated)
+}
+
+anotopTab_CvsA.INPUT <- anottopTap(topTab_CvsA.INPUT)
+anotopTab_CvsA.WASH <- anottopTap(topTab_CvsA.WASH)
+anotopTab_CvsA.ELUTED <- anottopTap(topTab_CvsA.ELUTED)
+anotopTab_INT <- anottopTap(topTab_INT)
 ```
 
+Muestra de la tabla CvsA.INPUT anotada:
+```{r sample annotated CvsA.INPUT}
+head(anotopTab_CvsA.INPUT)
+```
 
 
 
