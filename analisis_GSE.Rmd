@@ -481,6 +481,12 @@ cont.matrix <- makeContrasts(
   CvsA.ELUTED = CTRL.ELUTED - ASD.ELUTED,
   INT = (CTRL.INPUT - ASD.INPUT) - (CTRL.WASH - ASD.WASH) - (CTRL.ELUTED - ASD.ELUTED),
   levels = designMat)
+
+cont.matrix2 <- makeContrasts(
+  CvsA.INPUT = CTRL.INPUT - ASD.INPUT,
+  CvsA.WASH = CTRL.WASH - ASD.WASH,
+  CvsA.ELUTED = CTRL.ELUTED - ASD.ELUTED,
+  levels = designMat)
 ```
 
 # Estimación del modelo
@@ -489,6 +495,9 @@ cont.matrix <- makeContrasts(
 fit <- lmFit(eset_filtered, designMat)
 fit.main <- contrasts.fit(fit, cont.matrix)
 fit.main <- eBayes(fit.main)
+
+fit.main2 <- contrasts.fit(fit, cont.matrix2)
+fit.main2 <- eBayes(fit.main2)
 ```
 
 ## Lists of differentially expressed gens
@@ -497,6 +506,9 @@ fit.main <- eBayes(fit.main)
 topTab_CvsA.INPUT <- topTable(fit.main, number=nrow(fit.main), coef="CvsA.INPUT",
                               adjust="fdr")
 head(topTab_CvsA.INPUT)
+
+topTab_CvsA.INPUT2 <- topTable(fit.main2, number=nrow(fit.main2), coef="CvsA.INPUT",
+                              adjust="fdr")
 ```
 
 ### Comparación 2 (CvsA.WASH): Genes que cambian su expresión entre las condiciones "Control" y "ASD" detectados en muestras de ARNm enriquecidas para colas poli-A cortas (WASH).
@@ -504,6 +516,9 @@ head(topTab_CvsA.INPUT)
 topTab_CvsA.WASH <- topTable(fit.main, number=nrow(fit.main), coef="CvsA.WASH",
                               adjust="fdr")
 head(topTab_CvsA.WASH)
+
+topTab_CvsA.WASH2 <- topTable(fit.main2, number=nrow(fit.main2), coef="CvsA.WASH",
+                              adjust="fdr")
 ```
 
 ### Comparación 3 (CvsA.ELUTED): Genes que cambian su expresión entre las condiciones "Control" y "ASD" detectados en muestras de ARNm enriquecidas para colas poli-A largas (ELUTED).
@@ -511,6 +526,9 @@ head(topTab_CvsA.WASH)
 topTab_CvsA.ELUTED <- topTable(fit.main, number=nrow(fit.main), coef="CvsA.ELUTED",
                               adjust="fdr")
 head(topTab_CvsA.ELUTED)
+
+topTab_CvsA.ELUTED2 <- topTable(fit.main2, number=nrow(fit.main2), coef="CvsA.ELUTED",
+                              adjust="fdr")
 ```
 
 ### Comparación 4 (INT): Genes que cambian su expresión de forma significativa por interacción entre la condición de la muestra (CONTROL, ASD) y el material examinado (INPUT, WASH, ELUTED).
@@ -537,6 +555,10 @@ anotopTab_CvsA.INPUT <- anottopTap(topTab_CvsA.INPUT)
 anotopTab_CvsA.WASH <- anottopTap(topTab_CvsA.WASH)
 anotopTab_CvsA.ELUTED <- anottopTap(topTab_CvsA.ELUTED)
 anotopTab_INT <- anottopTap(topTab_INT)
+
+anotopTab_CvsA.INPUT2 <- anottopTap(topTab_CvsA.INPUT2)
+anotopTab_CvsA.WASH2 <- anottopTap(topTab_CvsA.WASH2)
+anotopTab_CvsA.ELUTED2 <- anottopTap(topTab_CvsA.ELUTED2)
 ```
 
 Muestra de la tabla CvsA.INPUT anotada:
@@ -562,6 +584,46 @@ abline(v=c(-1,1))
 }
 ```
 
+```{r volcanoplots2, fig.height=12, fig.width=5}
+par(mfrow=c(3, 1))
+
+contrastes2 <- colnames(fit.main2$coefficients)
+
+for (contrast in 1:length(contrastes2)){
+  volcanoplot(fit.main2, 
+              coef = contrastes2[contrast],
+              highlight = 10, 
+              names = eval(str2expression(
+                paste0("anotopTab_", contrastes2[contrast], "2$Gene.Symbol"))),
+              main=paste("Genes diferencialmente expresados", contrastes2[contrast],
+                         sep = "\n"))
+abline(v=c(-1,1))
+}
+```
+# Comparaciones múltiples
+¿Qué genes cambian simultáneamente en más de una comparación?
+```{r decidetests}
+# as many columns as comparisons and as many rows as genes.
+res <- decideTests(fit.main, method="separate", adjust.method="fdr", p.value=0.2,
+                   lfc = 0)
+# This table can be annotated and saved as a csv file, for example
+
+res2 <- decideTests(fit.main2, method="separate", adjust.method="fdr", p.value=0.2,
+                   lfc = 0)
+```
+
+En la tabla de comparaciones múltiples, cada gen sobreexpresado está marcado con un 1, un 0 si no hay cambio significativo o un -1 si está downregulado.
+
+Resumen de los resultados:
+```{r resumen comparaciones multiples}
+sum.res.rows <- apply(abs(res), 1, sum)
+res.selected <- res[sum.res.rows!=0, ]
+print(summary(res))
+
+sum.res.rows2 <- apply(abs(res2), 1, sum)
+res.selected2 <- res[sum.res.rows2!=0, ]
+print(summary(res2))
+```
 
 
 
