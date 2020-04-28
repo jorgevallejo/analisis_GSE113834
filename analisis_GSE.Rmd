@@ -539,8 +539,8 @@ head(anotopTab_WvsE.CTRL)
 ```
 
 # Visualización (volcanoplots)
-```{r volcanoplots, fig.height=16, fig.width=5}
-par(mfrow=c(4, 1))
+```{r volcanoplots, fig.height=12, fig.width=5}
+par(mfrow=c(3, 1))
 
 contrastes <- colnames(fit.main$coefficients)
 
@@ -556,22 +556,6 @@ abline(v=c(-1,1))
 }
 ```
 
-```{r volcanoplots2, fig.height=12, fig.width=5}
-par(mfrow=c(3, 1))
-
-contrastes2 <- colnames(fit.main2$coefficients)
-
-for (contrast in 1:length(contrastes2)){
-  volcanoplot(fit.main2, 
-              coef = contrastes2[contrast],
-              highlight = 10, 
-              names = eval(str2expression(
-                paste0("anotopTab_", contrastes2[contrast], "2$Gene.Symbol"))),
-              main=paste("Genes diferencialmente expresados", contrastes2[contrast],
-                         sep = "\n"))
-abline(v=c(-1,1))
-}
-```
 # Comparaciones múltiples
 ¿Qué genes cambian simultáneamente en más de una comparación?
 ```{r decidetests}
