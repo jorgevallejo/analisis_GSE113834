@@ -528,16 +528,14 @@ anottopTap <- function(x){
   return (annotated)
 }
 
-anotopTab_CvsA.INPUT <- anottopTap(topTab_CvsA.INPUT)
-anotopTab_CvsA.WASH <- anottopTap(topTab_CvsA.WASH)
-anotopTab_CvsA.ELUTED <- anottopTap(topTab_CvsA.ELUTED)
+anotopTab_WvsE.CTRL <- anottopTap(topTab_WvsE.CTRL)
+anotopTab_WvsE.ASD <- anottopTap(topTab_WvsE.ASD)
 anotopTab_INT <- anottopTap(topTab_INT)
-
 ```
 
-Muestra de la tabla CvsA.INPUT anotada:
-```{r sample annotated CvsA.INPUT}
-head(anotopTab_CvsA.INPUT)
+Muestra de la tabla WvsE.CTRL anotada:
+```{r sample annotated WvsE.CTRL}
+head(anotopTab_WvsE.CTRL)
 ```
 
 # Visualización (volcanoplots)
