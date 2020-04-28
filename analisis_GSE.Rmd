@@ -139,7 +139,7 @@ save("gse", file="intermediateResults/gse.RData")
 }
 gse_expr <- unlist(gse[[1]])
 ```
-```{r}
+```{r, eval=FALSE}
 gse <- getGEO("GSE113834", GSEMatrix = TRUE, destdir = "data", getGPL = TRUE)
 ```
 
@@ -466,26 +466,20 @@ rownames(designMat) <- targets$Abreviado
 
 # Contrastes
 
-Analizando la lógica, los métodos y los objetivos del estudio; los contrastes más interesantes e informativos son los que comparan el efecto grupo (CTRL vs. ASD), ya que el objeto último del estudio es comparar cerebros normales con cerebros autistas. Pero, dado que la composición de mRNA en cada material (input, wash, eluted) es diferente, tiene sentido hacer un contraste en cada uno de los materiales:
+En el estudio primero se estableció qué genes presentaban cambios significativos entre las muestras WASH y las muestras ELUTED. Y se comprobó si esos cambios genes eran los mismos en sujetos con la condición CONTROL y sujetos con la condición ASD.
 
-CTRL vs ASD en INPUT
-CTRL vs ASD en WASH
-CTRL vs ASD en ELUTED
+Para replicar ese razonamiento, hemos organizado la matriz de contrastes de la siguiente manera:
 
-También podría valer la pena comprobar si hay interacción entre grupo y material.
+WASH vs ELUTED en CONTROL
+WASH vs ELUTED en ASD
+
+También podría valer la pena comprobar si hay interacción entre condición y material.
 
 ```{r matriz de contrastes}
 cont.matrix <- makeContrasts(
-  CvsA.INPUT = CTRL.INPUT - ASD.INPUT,
-  CvsA.WASH = CTRL.WASH - ASD.WASH,
-  CvsA.ELUTED = CTRL.ELUTED - ASD.ELUTED,
-  INT = (CTRL.INPUT - ASD.INPUT) - (CTRL.WASH - ASD.WASH) - (CTRL.ELUTED - ASD.ELUTED),
-  levels = designMat)
-
-cont.matrix2 <- makeContrasts(
-  CvsA.INPUT = CTRL.INPUT - ASD.INPUT,
-  CvsA.WASH = CTRL.WASH - ASD.WASH,
-  CvsA.ELUTED = CTRL.ELUTED - ASD.ELUTED,
+  WvsE.CTRL = CTRL.WASH - CTRL.ELUTED,
+  WvsE.ASD = ASD.WASH - ASD.ELUTED,
+  INT = (CTRL.WASH - CTRL.ELUTED) - (ASD.WASH - ASD.ELUTED),
   levels = designMat)
 ```
 
@@ -495,53 +489,36 @@ cont.matrix2 <- makeContrasts(
 fit <- lmFit(eset_filtered, designMat)
 fit.main <- contrasts.fit(fit, cont.matrix)
 fit.main <- eBayes(fit.main)
-
-fit.main2 <- contrasts.fit(fit, cont.matrix2)
-fit.main2 <- eBayes(fit.main2)
 ```
 
 ## Lists of differentially expressed gens
-### Comparación 1 (CvsA.INPUT): Genes que cambian su expresión entre las condiciones "Control" y "ASD" detectados en muestras de ARN total (INPUT).
-```{r topTab lists CvsA.INPUT}
-topTab_CvsA.INPUT <- topTable(fit.main, number=nrow(fit.main), coef="CvsA.INPUT",
+### Comparación 1 (WvsE.CTRL): Genes diferencialmente expresados con colas poli-A cortas (WASH) frente a colas poli-A largas (ELUTED) en sujetos control (CTRL).
+```{r topTab lists WvsE.CTRL}
+topTab_WvsE.CTRL <- topTable(fit.main, number=nrow(fit.main), coef="WvsE.CTRL",
                               adjust="fdr")
-head(topTab_CvsA.INPUT)
-
-topTab_CvsA.INPUT2 <- topTable(fit.main2, number=nrow(fit.main2), coef="CvsA.INPUT",
-                              adjust="fdr")
+head(topTab_WvsE.CTRL)
 ```
 
-### Comparación 2 (CvsA.WASH): Genes que cambian su expresión entre las condiciones "Control" y "ASD" detectados en muestras de ARNm enriquecidas para colas poli-A cortas (WASH).
-```{r topTab lists CvsA.WASH}
-topTab_CvsA.WASH <- topTable(fit.main, number=nrow(fit.main), coef="CvsA.WASH",
+### Comparación 2 (WvsE.ASD): Genes diferencialmente expresados con colas poli-A cortas (WASH) frente a colas poli-A largas (ELUTED) en sujetos autistas (ASD).
+```{r topTab lists WvsE.ASD}
+topTab_WvsE.ASD <- topTable(fit.main, number=nrow(fit.main), coef="WvsE.ASD",
                               adjust="fdr")
-head(topTab_CvsA.WASH)
-
-topTab_CvsA.WASH2 <- topTable(fit.main2, number=nrow(fit.main2), coef="CvsA.WASH",
-                              adjust="fdr")
+head(topTab_WvsE.ASD)
 ```
 
-### Comparación 3 (CvsA.ELUTED): Genes que cambian su expresión entre las condiciones "Control" y "ASD" detectados en muestras de ARNm enriquecidas para colas poli-A largas (ELUTED).
-```{r topTab lists CvsA.ELUTED}
-topTab_CvsA.ELUTED <- topTable(fit.main, number=nrow(fit.main), coef="CvsA.ELUTED",
-                              adjust="fdr")
-head(topTab_CvsA.ELUTED)
-
-topTab_CvsA.ELUTED2 <- topTable(fit.main2, number=nrow(fit.main2), coef="CvsA.ELUTED",
-                              adjust="fdr")
-```
-
-### Comparación 4 (INT): Genes que cambian su expresión de forma significativa por interacción entre la condición de la muestra (CONTROL, ASD) y el material examinado (INPUT, WASH, ELUTED).
-```{r topTab lists CvsA.INT}
+### Comparación 3 (INT): Genes que cambian su expresión de forma significativa por interacción entre la condición del sujeto (CONTROL, ASD) y el material examinado (WASH, ELUTED).
+```{r topTab lists INT}
 topTab_INT <- topTable(fit.main, number=nrow(fit.main), coef="INT",
                               adjust="fdr")
 head(topTab_INT)
 ```
 
+
 Las tablas de este apartado son tan sólo muestras, y la primera columna contiene la ID de las sondas de Affymetrix, no códigos de genes. En el siguiente apartado llevaremos a cabo la anotación de los resultados para poder trabajar con los códigos de los genes en lugar de con las sondas.
 
 # Anotación de los genes
 A partir de los datos extraídos de GPL15207 (gpl_table) vamos a asociar el código de cada sonda al símbolo del gen correspondiente, el nombre del gen y el código de identificación en Entrez; para cada lista de genes diferencialmente expresados.
+
 ```{r anotar toptables}
 # Generate table from GPL with columns of interest
 geneAnots <- gpl_table[, c("ID", "Gene.Title", "Gene.Symbol", "Entrez.Gene")]
@@ -551,24 +528,19 @@ anottopTap <- function(x){
   return (annotated)
 }
 
-anotopTab_CvsA.INPUT <- anottopTap(topTab_CvsA.INPUT)
-anotopTab_CvsA.WASH <- anottopTap(topTab_CvsA.WASH)
-anotopTab_CvsA.ELUTED <- anottopTap(topTab_CvsA.ELUTED)
+anotopTab_WvsE.CTRL <- anottopTap(topTab_WvsE.CTRL)
+anotopTab_WvsE.ASD <- anottopTap(topTab_WvsE.ASD)
 anotopTab_INT <- anottopTap(topTab_INT)
-
-anotopTab_CvsA.INPUT2 <- anottopTap(topTab_CvsA.INPUT2)
-anotopTab_CvsA.WASH2 <- anottopTap(topTab_CvsA.WASH2)
-anotopTab_CvsA.ELUTED2 <- anottopTap(topTab_CvsA.ELUTED2)
 ```
 
-Muestra de la tabla CvsA.INPUT anotada:
-```{r sample annotated CvsA.INPUT}
-head(anotopTab_CvsA.INPUT)
+Muestra de la tabla WvsE.CTRL anotada:
+```{r sample annotated WvsE.CTRL}
+head(anotopTab_WvsE.CTRL)
 ```
 
 # Visualización (volcanoplots)
-```{r volcanoplots, fig.height=16, fig.width=5}
-par(mfrow=c(4, 1))
+```{r volcanoplots, fig.height=12, fig.width=5}
+par(mfrow=c(3, 1))
 
 contrastes <- colnames(fit.main$coefficients)
 
@@ -584,32 +556,13 @@ abline(v=c(-1,1))
 }
 ```
 
-```{r volcanoplots2, fig.height=12, fig.width=5}
-par(mfrow=c(3, 1))
-
-contrastes2 <- colnames(fit.main2$coefficients)
-
-for (contrast in 1:length(contrastes2)){
-  volcanoplot(fit.main2, 
-              coef = contrastes2[contrast],
-              highlight = 10, 
-              names = eval(str2expression(
-                paste0("anotopTab_", contrastes2[contrast], "2$Gene.Symbol"))),
-              main=paste("Genes diferencialmente expresados", contrastes2[contrast],
-                         sep = "\n"))
-abline(v=c(-1,1))
-}
-```
 # Comparaciones múltiples
 ¿Qué genes cambian simultáneamente en más de una comparación?
 ```{r decidetests}
 # as many columns as comparisons and as many rows as genes.
-res <- decideTests(fit.main, method="separate", adjust.method="fdr", p.value=0.2,
+res <- decideTests(fit.main, method="separate", adjust.method="fdr", p.value=0.1,
                    lfc = 0)
 # This table can be annotated and saved as a csv file, for example
-
-res2 <- decideTests(fit.main2, method="separate", adjust.method="fdr", p.value=0.2,
-                   lfc = 0)
 ```
 
 En la tabla de comparaciones múltiples, cada gen sobreexpresado está marcado con un 1, un 0 si no hay cambio significativo o un -1 si está downregulado.
@@ -619,10 +572,6 @@ Resumen de los resultados:
 sum.res.rows <- apply(abs(res), 1, sum)
 res.selected <- res[sum.res.rows!=0, ]
 print(summary(res))
-
-sum.res.rows2 <- apply(abs(res2), 1, sum)
-res.selected2 <- res[sum.res.rows2!=0, ]
-print(summary(res2))
 ```
 
 
