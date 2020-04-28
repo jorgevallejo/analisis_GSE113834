@@ -560,12 +560,9 @@ abline(v=c(-1,1))
 ¿Qué genes cambian simultáneamente en más de una comparación?
 ```{r decidetests}
 # as many columns as comparisons and as many rows as genes.
-res <- decideTests(fit.main, method="separate", adjust.method="fdr", p.value=0.2,
+res <- decideTests(fit.main, method="separate", adjust.method="fdr", p.value=0.1,
                    lfc = 0)
 # This table can be annotated and saved as a csv file, for example
-
-res2 <- decideTests(fit.main2, method="separate", adjust.method="fdr", p.value=0.2,
-                   lfc = 0)
 ```
 
 En la tabla de comparaciones múltiples, cada gen sobreexpresado está marcado con un 1, un 0 si no hay cambio significativo o un -1 si está downregulado.
@@ -575,10 +572,6 @@ Resumen de los resultados:
 sum.res.rows <- apply(abs(res), 1, sum)
 res.selected <- res[sum.res.rows!=0, ]
 print(summary(res))
-
-sum.res.rows2 <- apply(abs(res2), 1, sum)
-res.selected2 <- res[sum.res.rows2!=0, ]
-print(summary(res2))
 ```
 
 
