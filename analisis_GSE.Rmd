@@ -351,18 +351,17 @@ En una primera selección de genes, dejaremos fuera aquellos genes que varían p
 # data/GPL15207-17536.txt
 # Such file has been previously downloaded from the
 # address stored in the variable gpl_origin
-
-# Read the lines of the file
-gpl_text <- readLines("data/GPL15207-17536.txt")
-# Identify the line just before the headers line
-# This will be used as the starting point for read.table()
-start_row <- grep("#SPOT_ID =", gpl_text)
-
 gpl_table_file <- "intermediateResults/gpl_table.RData"
 
 if(file.exists(gpl_table_file)){
   load(gpl_table_file)
 }else{
+  # Read the lines of the file
+  gpl_text <- readLines("data/GPL15207-17536.txt")
+  # Identify the line just before the headers line
+  # This will be used as the starting point for read.table()
+  start_row <- grep("#SPOT_ID =", gpl_text)
+
   gpl_table <- read.table("data/GPL15207-17536.txt", sep = "\t",
                         skip = start_row,
                         # In the GPL table NA values are codified as "---"
@@ -585,9 +584,31 @@ A partir del diagrama de Venn, vemos que 223 genes están diferencialmente expre
 
 Otro grupo de genes interesantes serían aquellos cuyo perfil de up/down regulación cambia en muestras de sujetos control y sujetos ASD.
 
+Estos grupos son los que marcarán nuestra lista definitiva de genes de interés.
+
+```{r lista definitiva interes}
+# Solo nos interesan aquellos genes que:
+## estan up o down regulados solo en uno de los grupos
+## estan up en un grupo y down en el otro
+dif.res.rows <- apply(res.selected, 1, function(x) {x[1] == x[2]})
+res.selected2 <- res.selected[dif.res.rows == FALSE, ]
+print(summary(res.selected2))
+
+```
+
+```{r venn diagram lista interes, fig.height=4.5, fig.width=4.5}
+vennDiagram(res.selected2[, 1:3], cex=0.9)
+title("Genes en común entre dos comparaciones\n Seleccionados con FDR <0.1",
+      cex.main=0.9)
+```
+
+En resumen, encontramos 223 genes exclusivamente en sujetos control cuyos ARNm tienen colas diferencialmente largas o cortas.
+Encontramos 627 genes exclusivamente en sujetos ASD cuyos ARNm tienen colas diferencialmente largas o cortas.
+Ningún gen con diferenciación invertida entre comparaciones.
+
 ## Visualización de perfiles de expresión mediante heatmap
-```{r seleccion genes para visualizacion perfiles expresion}
-probesInHeatmap <- rownames(res.selected)
+```{r seleccion genes para visualizacion perfiles expresion lista interes}
+probesInHeatmap <- rownames(res.selected2)
 HMdata <- eset_filtered[rownames(eset_filtered) %in% probesInHeatmap, ]
 HMdata <- merge(HMdata, geneAnots[, c("ID", "Gene.Symbol")], by.x=0, by.y="ID")
 rownames(HMdata) <- HMdata$Gene.Symbol
@@ -625,6 +646,15 @@ heatmap.2(as.matrix(HMdata),
           ColSideColors = colsidecolors,
           tracecol = NULL,
           srtCol = 30)
+```
+
+# Significatividad biológica
+
+Usaremos _clusterProfiler_ para esta parte del informe.
+
+En primer lugar preparamos la lista de genes a analizar:
+```{r lista para significatividad biologica}
+
 ```
 
 
