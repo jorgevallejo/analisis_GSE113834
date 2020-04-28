@@ -44,7 +44,7 @@ if (!(dir.exists("intermediateResults"))){
 }
 ```
 
-```{r prepare data, eval=FALSE}
+```{r prepare data from CEL files, eval=FALSE}
 GSE_address <- "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE113834"
 data_origin <- "https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE113834&format=file"
 gpl_origin <- "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?mode=raw&is_datatable=true&acc=GPL15207&id=17536&db=GeoDb_blob169"
