@@ -577,9 +577,56 @@ print(summary(res))
 ## Venn Diagram
 ```{r venn diagram, fig.height=4.5, fig.width=4.5}
 vennDiagram(res.selected[, 1:2], cex=0.9)
+title("Genes en común entre dos comparaciones\n Seleccionados con FDR <0.1",
+      cex.main=0.9)
 ```
 
 A partir del diagrama de Venn, vemos que 223 genes están diferencialmente expresados sólo en las muestras control, y 627 sólo en las muestras ASD. Son estos dos grupos de genes los que en principio nos interesa explorar.
+
+Otro grupo de genes interesantes serían aquellos cuyo perfil de up/down regulación cambia en muestras de sujetos control y sujetos ASD.
+
+## Visualización de perfiles de expresión mediante heatmap
+```{r seleccion genes para visualizacion perfiles expresion}
+probesInHeatmap <- rownames(res.selected)
+HMdata <- eset_filtered[rownames(eset_filtered) %in% probesInHeatmap, ]
+HMdata <- merge(HMdata, geneAnots[, c("ID", "Gene.Symbol")], by.x=0, by.y="ID")
+rownames(HMdata) <- HMdata$Gene.Symbol
+HMdata[, c("Row.names", "Gene.Symbol")] <- NULL
+colnames(HMdata) <- my.targets$X.Abreviado
+```
+```{r}
+#Colores para ColSideColors:
+colsidecolors <- c("yellow", "orange", "red", "yellow", 
+  "orange", "red", "violet", "blue",
+  "green", "violet", "blue",    "green", 
+ "yellow",  "orange", "red", "yellow", 
+ "orange", "red", "violet", "blue",   
+ "green",  "violet", "blue",    "green", 
+ "violet", "blue",    "green" )
+```
+```{r Generate heatmap with clustering}
+paleta <- colorRampPalette(c("blue", "red"))(n = 299)
+library(gplots)
+
+heatmap.2(as.matrix(HMdata),
+          Rowv = TRUE,
+          Colv = TRUE,
+          dendrogram = "both",
+          main = "Genes diferencialmente expresados \n FDR < 0.1",
+          scale = "row",
+          col = paleta,
+          sepcolor = "white",
+          sepwidth = c(0.05, 0.05),
+          cexRow = 0.5,
+          cexCol = 0.7,
+          key = TRUE,
+          keysize = 1.5,
+          density.info = "histogram",
+          ColSideColors = colsidecolors,
+          tracecol = NULL,
+          srtCol = 30)
+```
+
 
 # Apéndice A: Reproducibilidad
 ```{r session_info, include=TRUE, echo=TRUE, results='markup'}
