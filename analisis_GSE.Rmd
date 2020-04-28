@@ -574,7 +574,12 @@ res.selected <- res[sum.res.rows!=0, ]
 print(summary(res))
 ```
 
+## Venn Diagram
+```{r venn diagram, fig.height=4.5, fig.width=4.5}
+vennDiagram(res.selected[, 1:2], cex=0.9)
+```
 
+A partir del diagrama de Venn, vemos que 223 genes están diferencialmente expresados sólo en las muestras control, y 627 sólo en las muestras ASD. Son estos dos grupos de genes los que en principio nos interesa explorar.
 
 # Apéndice A: Reproducibilidad
 ```{r session_info, include=TRUE, echo=TRUE, results='markup'}
