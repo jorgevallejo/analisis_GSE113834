@@ -1,12 +1,13 @@
 ---
-title: "Análisis GSE113834"
+title: "Análisis de datos de expresión de la serie GSE113834"
 subtitle: "Análisis Datos Ómicos - PEC 1"
 author: "Jorge Vallejo Ortega"
 date: '`r format(Sys.Date(),"%e de %B, %Y")`'
 output:
+  html_document:
+    toc: true
   pdf_document:
       toc: true
-      #pandoc_args: -V toc-title="Sumario"
 # Next code for knitting both types of documents automatically comes from https://stackoverflow.com/questions/39662365/knit-one-markdown-file-to-two-output-files/53280491#53280491
 knit: (function(inputFile, encoding) {
   rmarkdown::render(inputFile, encoding = encoding,
@@ -19,6 +20,8 @@ knit: (function(inputFile, encoding) {
 
 ```{r setup, include=FALSE}
 # knitr options
+
+# Do not display code in output document
 knitr::opts_chunk$set(echo = FALSE)
 
 # This is a try:
@@ -28,6 +31,10 @@ knitr::opts_knit$set(stop_on_error = 2L)
 # when an error is found instead of running the
 # complete script.
 ```
+
+# Abstract
+
+XXX Falta por incluir XXX
 
 ```{r estructura de directorios}
 # Directory for raw data
@@ -44,6 +51,64 @@ if (!(dir.exists("intermediateResults"))){
 }
 ```
 
+# Objetivos
+
+El objetivo, dentro del trabajo original XXX insertar referencia XXX, es estudiar el acortamiento (deadenilación) de la cola poli-A en ARNm de genes asociados al riesgo de desarrollar trastorno del espectro autista ("autism spectrum disorder", ASD).
+
+Mi objetivo en este análisis es, a partir de los datos de expresión detectados por las microarrays, extraer un listado de genes cuyos ARNm contengan una cola poli-A más larga, o más corta, al comparar muestras de sujetos control con muestras de sujetos con ASD. Una vez obtenido el listado, el objetivo final es averiguar qué términos de la ontología génica están significativamente enriquecidos en esa lista de genes.
+
+# Materiales y métodos
+
+## Muestras y datos de origen
+El material biológico de partida fueron muestras post-mórtem de córtex prefrontal de pacientes con trastorno del espectro autista (n = 5) y de controles (n = 4), todos ellos varones de 5-23 años de edad. A partir de las muestras de tejido se extrajo el ARN total. De cada muestra de ARN total se guardó una alíquota ("Input"), y el resto se separó por cromatografía en un fracción enriquecida en ARNm con colas poli-A largas ("Wash") y otra enriquecida en ARNm con colas poli-A cortas ("Eluted"). Las muestras de ARN fueron traducidas a ADNc, y este amplificado.
+
+Las muestras de ADNc fueron hibridadas en arrays GeneChip Human PrimeView (Affymetrix, 901838); estos fueron leídos en un GeneChip Scanner GCS3000 (Affymetrix), y mediante Command Console (Affymetrix) los datos se almacenaron en archivos CEL. Estos archivos CEL, descargados desde XXX referencia a la web en GEO XXX han sido la base para el presente análisis. Los datos usados en la anotación de los resultados proceden de XXX enlace al archivo GPL XXX.
+
+## Diseño experimental
+
+El conjunto de 27 ficheros CEL (cada uno procedente de una microarray) se puede clasificar según la condición del sujeto de origen ("Control" o "ASD"), y según el enriquecimiento en diferentes longitudes de colas poli-A en los ARNm ("Input", "Wash", o "Eluted").
+
+Por combinación de ambas variables podemos dividir las muestras en seis grupos experimentales:
+Control-Input
+Control-Wash
+Control-Eluted
+
+ASD-Input
+ASD-Wash
+ASD-Eluted
+
+Las muestras "Input" contienen el ARN total. Si comparamos las muestras Control-Input con las muestras ASD-Input, comprobaremos si podemos detectar expresión diferencial entre las condiciones Control y ASD.
+
+Las muestras "Wash" están enriquecidas en ARN de cola poli-A corta, y las muestras "Eluted" en ARN de cola poli-A larga. Podemos hacer las siguientes comparaciones:
+Control-Wash vs Control-Eluted: Qué genes se transcriben a ARN de diferentes longitudes de cola poli-A en sujetos Control.
+
+ASD-Wash vs ASD-Eluted: Qué genes se transcriben a ARN de diferentes longitudes de cola poli-A en sujetos Control.
+
+Comparando los listados de genes de las dos comparaciones anteriores obtendremos un listado de los genes que se comportan de forma diferente en sujetos Control y sujetos ASD con respecto a las colas poli-A de sus ARN.
+
+## Procedimiento seguido en el análisis
+
+Los pasos seguidos para realizar el presente análisis han sido los siguientes:
+1. Obtenión de los datos de expresión en bruto.
+2. Control de calidad de los datos brutos.
+3. Normalización.
+4. Control de calidad de los datos normalizados.
+5. Filtraje no específico.
+6. Identificación de genes diferencialmente expresados.
+7. Anotación de los resultados.
+8. Comparación entre comparaciones.
+9. Análisis del enriquecimiento de rutas.
+
+### Obtención de los datos en bruto
+
+Los datos en bruto usados en el análisis ha sido descargados de Gene Expression Omnibus, un repositorio público de datos de genómica funcional, donde los datos están catalogados bajo el código de acceso GSE113834 XXX inserta enlace XXX.
+
+Los datos de expresión han sido descargados de dicho repositorio en forma de ficheros CEL.
+
+La relación entre cada fichero y el grupo experimental al que pertenece se ha extraido de la tabla "Samples", accesible en la misma página web que los ficheros CEL.
+
+Los datos de anotación correspondientes al modelo de array usado, están catalogados en el repositorio GEO bajo el código de acceso GPL15207 XXX insertar enlace XXX. Dichos datos han sido descargados en forma de fichero de texto, y usados para anotar los datos obtenidos de las sondas de las arrays.
+
 ```{r prepare data from CEL files, eval=FALSE}
 GSE_address <- "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE113834"
 data_origin <- "https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE113834&format=file"
@@ -58,7 +123,8 @@ sapply(zip_files, function(x){
   system2("gunzip",
           args = c("-d", paste0("data/", x)))
   })
-
+```
+```{r generate targets file}
 # Generate targets file
 # initial_target_file.csv is a copy-paste of the samples/group table
 # from the GSE webpage to LibreOffice Calc and saved as a csv file.
@@ -84,7 +150,7 @@ write.csv2(targets, file = "intermediateResults/targets2.csv", row.names = FALSE
 # Run this chunk ONLY if you want to re-do
 # all the report FROM ZERO.
 # Remember that the .RData files are there to
-# avoid unnecesarily redoing long data processing.
+# avoid unnecesarily redoing of long data processing.
 
 file.remove(c("./intermediateResults/dist_matrix.RData",
               "./intermediateResults/gse.RData",
@@ -104,14 +170,8 @@ library(knitr)
 
 ```
 
-Grupos experimentales (columna grupos)
-Condición del sujeto (condición)
-Material usado (material)
-Número total de muestras:
-
-
 ```{r construct targets file, eval=FALSE}
-# Read the CEL files
+# List of CEL files
 library('oligo')
 celFiles <- list.celfiles("data", full.names=TRUE)
 # Generate phenoData
@@ -655,6 +715,25 @@ Usaremos _clusterProfiler_ para esta parte del informe.
 En primer lugar preparamos la lista de genes a analizar:
 ```{r lista para significatividad biologica}
 
+# Vector of EntrezIDs from the list of genes of interest (probesInHeatmap)
+geneList <- geneAnots[geneAnots$ID %in% probesInHeatmap, 4]
+universe <- nondup_probes$Entrez.Gene
+```
+```{r test de sobrerrepresentacion}
+library(clusterProfiler)
+library(org.Hs.eg.db)
+# As universe, I will use all genes represented in the microarray
+# before filtering by IQR
+ego <- enrichGO(gene = geneList,
+                universe = universe,
+                OrgDb = org.Hs.eg.db,
+                ont = "BP",
+                pAdjustMethod = "BH",
+                pvalueCutoff = 0.01,
+                qvalueCutoff = 0.05,
+                readable = TRUE)
+
+save(ego, file="intermediateResults/ego.RData")
 ```
 
 
