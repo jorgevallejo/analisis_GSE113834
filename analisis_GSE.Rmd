@@ -383,9 +383,13 @@ Un cambio notable en el diagrama de componentes es prinpales es la posición de 
 
 En conclusión, podríamos decir que la normalización de los datos ha producido el efecto esperado y no encontramos impedimento para proceder al análisis de los datos.
 
-# Filtraje no específico
+## Filtraje no específico
 
-En una primera selección de genes, dejaremos fuera aquellos genes que varían poco entre condiciones, y aquellos para los que no disponemos de anotación.
+Antes del análisis estadístico, para eliminar ruido y mejorar la sensibilidad, hemos eliminado datos procedentes de sondas que no aportan información o que pueden aportar información duplicada o confuso.
+
+En concreto, se han eliminado datos de las siguientes sondas: Sondas cuya función específica es el control de calidad de las arrays y no se corresponden a genes, sondas para las que no se dispone de anotación, sondas duplicadas (diferentes sondas que corresponden al mismo gen)[^1], y sondas que corresponden a más de un gen[^2].
+
+Después de esa primera selección hemos excluido también aquellas sondas con menor variabilidad de datos entre muestras[^3]. Esto se ha hecho así porque no se espera que genes con poca variabilidad entre muestras presenten expresión diferencial, y reducir la cantidad de genes a examinar aumentará la sensibilidad del análisis.
 
 ```{r read GPL15207 table}
 # This chunk reads the GPL15207 data from the file
@@ -438,8 +442,7 @@ IQR_no_entrez <- IQR_noprobes[-no_entrez, ]
 # handle those cases.
 ```
 
-Affymetrix Quality Control probes: `r length(QCprobes)`
-Probes without Entrez ID: `r length(no_entrez)`
+
 
 ```{r sondas para el mismo codigo Entrez}
 # Order files (descendant) for entrezId, then for IQR
@@ -451,8 +454,6 @@ dup_rows <- which(dup_entrez == TRUE)
 nondup_probes <- ordered_IQR[-dup_rows, ]
 ```
 
-Probes filtered for duplication: `r sum(dup_entrez)`
-
 ```{r sondas con varios codigos Entrez}
 # Detect which values in column Entrez.Gene contain more than one code
 multGenes <- grep("/", nondup_probes$Entrez.Gene, value = FALSE)
@@ -460,9 +461,6 @@ multGenes <- grep("/", nondup_probes$Entrez.Gene, value = FALSE)
 nondup_probes <- nondup_probes[-multGenes, ]
 ```
 
-Sondas filtradas por corresponder a más de un gen:`r format(length(multGenes), big.mark=" ")`
-
-En un caso real, me sentiría más cómodo examinando cada caso en el que una de estas sondas, correspondientes a más de un gen, aparecieran en las listas de genes diferencialmente expresados ya que pueden explicarse por secuencias pertenecientes a familias génicas muy cercanas, o por pertenecer a transcritos que 'corran' a lo largo de varios genes. En este caso, sin embargo, debido a que se trata de un ejercicio de aprendizaje, y a la limitación de tiempo, me he limitado a eliminar de la lista aquellas sondas que pueden identificar más de un gen.
 
 ```{r filtraje por IQR}
 # Elimina las sondas cuyo rango interquantil (IQR) sea menor a la mediana
@@ -473,8 +471,11 @@ filtered_probes <- nondup_probes[nondup_probes$IQR > median_IQR, ]
 
 Número inicial de sondas: `r format(nrow(exprs_eset_rma), big.mark= " ")`
 
+Sondas de control de calidad: `r length(QCprobes)`
+Sondas sin anotación: `r length(no_entrez)`
+Sondas duplicadas: `r sum(dup_entrez)`
+Sondas que corresponden a más de un gen:`r format(length(multGenes), big.mark=" ")`
 Sondas excluidas por baja variabilidad: `r format(nrow(nondup_probes)-nrow(filtered_probes), big.mark= " ")`
-Sondas excluidas por ser controles de calidad del chip: `r format(), big.mark= " "`
 
 Número de sondas para siguientes análisis: `r format(nrow(filtered_probes), big.mark= " ")`
 
@@ -717,6 +718,13 @@ ego <- enrichGO(gene = geneList,
 save(ego, file="intermediateResults/ego.RData")
 ```
 
+# Notas
+
+[^1]: En estos casos, se ha comparado la variabilidad de los datos de cada sonda y se ha conservado sólo aquella con una mayor variabilidad entre muestras.
+
+[^2]: En concreto, se trata de sondas que en la tabla de anotaciones están asociadas a más de una identificación Entrez. Puede ser interesante averiguar por qué ocurre esto; pueden explicarse por secuencias pertenecientes a familias génicas muy cercanas, pseudogenes, o por pertenecer a transcritos que 'corran' a lo largo de varios genes. En este caso, sin embargo, debido limitaciones de tiempo, nos hemos limitado a eliminar de la lista aquellas sondas que pueden identificar más de un gen.
+
+[^3]: El criterio para eliminar sondas el análisis ha sido excluir aquellas sondas cuyo rango intercuartílico (IQR) estaba por debajo de la mediana del total de sondas.
 
 # Apéndice A: Reproducibilidad
 ```{r session_info, include=TRUE, echo=TRUE, results='markup'}
