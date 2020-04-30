@@ -326,12 +326,11 @@ A simple vista no se observa ningún gran defecto como roturas, burbujas o manch
 
 En ninguna de las gráficas hemos encontrado señales que nos hagan desconfiar de la calidad de ninguna de las muestras. La única excepción podría ser la muestra "CTRL-1 INPUT" en la gráfica de componentes principales; pero en el resto de gráficas no destaca de ninguna forma, así que la incluiremos con las demás en el resto del análisis.
 
-# Normalización de los datos
+## Normalización de los datos
 
 Antes de empezar el análisis de expresión es necesario procesar los datos brutos de forma que los datos de las diferentes muestras (micorarrays) sean comparables. El proceso de normalización intenta asegurarse de que las diferencias de intensidad reflejen la expresión diferencial de los genes, eliminando sesgos producidos por razones técnicas.
 
-El método de normalización que usaremos en este análisis es el RMA (_robust multi-array
-average_), que es uno de los más usados en el ecosistema de Bioconductor.
+El método de normalización que hemos usado en este análisis es el método RMA (_robust multi-array average_), que es uno de los más usados en el ecosistema de Bioconductor.
 
 ```{r normalizacion RMA}
 # First checks if the expressionset has been already calculated and saved
@@ -345,11 +344,11 @@ if(file.exists(eset_rma_file)){
 }
 ```
 
-# Control de calidad sobre datos normalizados
+## Control de calidad sobre datos normalizados
 
 Después de la normalización volvemos a realizar un control de calidad, para comprobar que el resultado de la normalización ha producido el efecto esperado en la distribución de los datos.
 
-## Diagrama de cajas
+### Diagrama de cajas
 
 Con gráfico de diagrama de cajas volvemos a comparar la distribución de la intensidad entre las diferentes muestras.
 
@@ -363,7 +362,7 @@ boxplot(eset_rma,
 
 Si lo comparamos con el gráfico de antes de normalizar, en éste la distribución de intensidades es mucho más uniforme entre muestras.
 
-## Componentes principales
+#### Componentes principales
 
 El análisis de componentes principales nos puede servir para detectar si las muestras se agrupan con otras muestras procedentes del mismo grupo o si no hay correspondencia entre muestras del mismo grupo.
 
@@ -376,7 +375,7 @@ plotPCA3(exprs_eset_rma, labels = array_labels,
          scale = FALSE, size = 3, colores = rainbow(6))
 ```
 
-Ahora el primer componente es responsable del 37% de la variabilidad total. Casi la mitad de lo que ocurría al utilizar los datos brutos. Las muestras se siguen separando según material, con "INPUT" en el centro, igual que antes; pero en esta ocasión "ELUTED" a la izquierda y "WASH" a la derecha. No sé si este cambio de orientación tiene algún significado o si es producido por el cálculo matricial.
+Ahora el primer componente es responsable del 37% de la variabilidad total. Casi la mitad de lo que ocurría al utilizar los datos brutos. Las muestras se siguen separando según material, con "Input" en el centro, igual que antes; las muestras "Eluted" a un lado y las muestras "Wash" al otro.
 
 La variabilidad explicada por la componente secundaria es el 16%, y también parece depender del material; separando claramente "INPUT" de los otros dos materiales ("ELUTED" y "WASH"). El grupo sin embargo - "CTRL" frente a "ASD" -, no parece tener una gran influencia en la variabilidad.
 
