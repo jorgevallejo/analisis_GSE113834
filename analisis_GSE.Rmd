@@ -188,11 +188,14 @@ rawData <- read.affybatch(filenames = celFiles,
                           phenoData = my.targets)
 ```
 
+Los diferentes archivos con los datos en bruto han sido manipulados utilizando R para realizar los controles de calidad y los análisis propiamente dichos. El código completo usado puede consultarse en el apéndice. XXX modifica párrafo según sea necesario XXX
 
+### Control de calidad de los datos en bruto
+Con el control de calidad pretendemos averiguar si los datos de alguna de las muestras presentan defectos o sesgos que desaconsejen usarlos, antes de continuar con el análisis.
 
-# Control de calidad de los datos en bruto
-Con el control de calidad pretendemos averiguar si los datos en bruto tienen calidad suficiente para continuar con el análisis, antes de normalizarlos.
+En este caso hemos usado examinado los datos de expresión mediante diferenes representaciones gráficas, en busca de anomalías.
 
+XXX Si finalmente no usas el paquete ArrayQualityMetrics, elimina esta parte XXX
 En esta ocasión usaremos el paquete de análisis ArrayQualityMetrics.
 
 ```{r control de calidad con ArrayQualityMetrics, eval=FALSE}
@@ -201,12 +204,14 @@ arrayQualityMetrics(rawData)
 ```
 
 ```{r re-used variables}
+# Labels for each sample
 array_labels <- noquote(pData(rawData)$X.Abreviado.)
+# Common colour pattern for the graphs
 graph_colours <- rainbow(length(array_labels))
 ```
 
 
-## Gráficos de densidad
+#### Gráficos de densidad
 
 Los gráficos de densidad nos informan acerca de la forma y posición de las señales sin normalizar.
 
@@ -221,7 +226,7 @@ legend(x=11.9, y=0.31, legend=array_labels,
 
 Este caso vemos que la curva de densidad es similar en todas las muestras, sin mostrar grandes diferencias.
 
-## Diagrama de cajas
+#### Diagrama de cajas
 
 El gráfico de diagrama de cajas nos permite comparar la distribución de la intensidad entre las diferentes muestras.
 
@@ -235,7 +240,7 @@ boxplot(rawData,
 
 Podemos ver que ninguna de las muestras destaca entre el resto. Hay pequeñas variaciones, pero es una característica esperable cuando comparamos los datos de intensidad en bruto.
 
-## Dendrograma del clúster jerárquico
+#### Dendrograma del clúster jerárquico
 
 El dendrograma nos ayuda a representar cómo se agrupan las muestras, y da pistas acerca de cuál es el factor experimental que determina las diferencias entre muestras. Aquellas muestras con datos más similares aparecerán agrupadas.
 
@@ -256,11 +261,11 @@ plot(hier_clust, main="Dendrograma de datos muestrales en bruto",
      hang = -1, cex = 0.66, xlab= "Muestras", sub="", ylab = "", yaxt="n")
 ```
 
-En este caso y a primera vista no parece haber un factor claro que haga que unas muestras están más cercanas entre sí que otras. Quizá el material (input/wash/eluted) en primer lugar, y el grupo (ctrl/asd) en segundo lugar; pero no es definitivo.
+En este caso, y a primera vista, no parece haber un factor claro que haga que unas muestras están más cercanas entre sí que otras. Quizá el material (input/wash/eluted) en primer lugar, y el grupo (ctrl/asd) en segundo lugar; pero no es definitivo.
 
-## Componentes principales
+#### Componentes principales
 
-El análisis de componentes principales nos puede servir para detectar si las muestras se agrupan con otras muestras procedentes del mismo grupo o si no hay correspondencia entre muestras del mismo grupo.
+El análisis de componentes principales nos puede servir para detectar si las muestras se agrupan con otras muestras procedentes del mismo grupo, o si no hay correspondencia entre muestras del mismo grupo.
 
 ```{r funcion plotPCA3}
 
@@ -300,13 +305,13 @@ plotPCA3(exprs(rawData), labels = array_labels,
 
 De forma similar a lo que veíamos en el dendrograma, las diferencias más importantes entre las muestras parecen deberse al material antes que al grupo.
 
-La componente más importante explica el 67.7% de la variabilidad total de las muestras, y parece deberse principalmente al material; las muestras "wash" se agrupan más a la izquierda, compartiendo la zona central con las muestras "input", y las muestras "eluted" agrupadas hacia la derecha del gráfico.
+La componente más importante explica el 67.7% de la variabilidad total de las muestras, y parece deberse principalmente al material; las muestras "Wash" se agrupan más a la izquierda, compartiendo la zona central con las muestras "Input", y las muestras "Eluted" agrupadas hacia la derecha del gráfico.
 
 La muestra "CTRL-1 INPUT" aparece alejada, no sólo de las otras muestras del grupo CTRL-INPUT, sino de todo el resto de muestras. Esto por sí sólo no significa que la muestra sea defectuosa, pero sí que deberíamos fijarnos en ella y comprobar qué resultados obtiene en el resto de gráficos.
 
-## Imagen del array
+#### Imagen del array
 
-Examinar la imagen del array nos permite hacer una evaluación de calidad a nivel "macro". Nos permite hacer una estimación a ojo de características como del balance del color, la uniformidad en la hibridación y en los spots, de si el background es mayor de lo normal y de la existencia de artefactos como el polvo o pequeñas marcas (rasguños).
+Examinar la imagen del array nos permite hacer una evaluación de calidad a nivel "macro". Nos permite hacer una estimación a ojo de características como el balance del color, la uniformidad en la hibridación y en los spots, si el background es mayor de lo normal y la existencia de artefactos como el polvo o pequeñas marcas (rasguños).
 
 
 ```{r array image, fig.height=32, fig.width=12}
@@ -317,9 +322,9 @@ for (num in 1:length(array_labels)){
 }
 ```
 
-Todas las imágenes tienen una estructura en el centro que no he sabido averiguar si corresponde a los datos originales o si la he introducido y inadvertidamente mientras manipulaba los datos.
+A simple vista no se observa ningún gran defecto como roturas, burbujas o manchas.
 
-A simple vista no se observa ningún gran defecto como roturas, burbujas o manchas. Si que parece a simple vista que las imágenes de material "INPUT" son más oscuras que el resto.
+En ninguna de las gráficas hemos encontrado señales que nos hagan desconfiar de la calidad de ninguna de las muestras. La única excepción podría ser la muestra "CTRL-1 INPUT" en la gráfica de componentes principales; pero en el resto de gráficas no destaca de ninguna forma, así que la incluiremos con las demás en el resto del análisis.
 
 # Normalización de los datos
 
