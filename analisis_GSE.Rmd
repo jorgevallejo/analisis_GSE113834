@@ -493,7 +493,7 @@ save(eset_filtered, file="intermediateResults/eset_filtered.RData")
 ## No puedo o no se como hacerlo
 ```
 
-# Matriz de diseño
+## Identificación de genes diferencialmente expresados
 
 Para el análisis de este ensayo, consideramos una matriz de diseño siguiendo un modelo de un factor con seis niveles, siendo esos niveles los grupos a los que está asignada cada muestra:
 `r unique(targets$Grupo)`
@@ -505,14 +505,12 @@ colnames(designMat) <- levels(targets$Grupo)
 rownames(designMat) <- targets$Abreviado
 ```
 
-# Contrastes
+Para cumplir con el objetivo del estudio, el interés entá en averiguar qué genes presentan cambios significativos entre las muestras "Wash" y las muestras "Eluted". Y además, si esos cambios significativos se mantienen entre los grupos "Control" y "ASD".
 
-En el estudio primero se estableció qué genes presentaban cambios significativos entre las muestras WASH y las muestras ELUTED. Y se comprobó si esos cambios genes eran los mismos en sujetos con la condición CONTROL y sujetos con la condición ASD.
+Para replicar ese razonamiento, hemos organizado los siguientes contrastes:
 
-Para replicar ese razonamiento, hemos organizado la matriz de contrastes de la siguiente manera:
-
-WASH vs ELUTED en CONTROL
-WASH vs ELUTED en ASD
+WASH vs ELUTED en sujetos CONTROL
+WASH vs ELUTED en sujetos ASD
 
 También podría valer la pena comprobar si hay interacción entre condición y material.
 
@@ -524,41 +522,30 @@ cont.matrix <- makeContrasts(
   levels = designMat)
 ```
 
-# Estimación del modelo
-
 ```{r estimacion del modelo}
 fit <- lmFit(eset_filtered, designMat)
 fit.main <- contrasts.fit(fit, cont.matrix)
 fit.main <- eBayes(fit.main)
 ```
 
-## Lists of differentially expressed gens
-### Comparación 1 (WvsE.CTRL): Genes diferencialmente expresados con colas poli-A cortas (WASH) frente a colas poli-A largas (ELUTED) en sujetos control (CTRL).
+## Anotación de las listas de genes
+
+A continuación presentamos una muestra de las listas de genes diferencialmente expresados para cada comparación, incluyendo el símbolo y nombre de cada gen, ordenados por p-valor ajustado.
+
 ```{r topTab lists WvsE.CTRL}
 topTab_WvsE.CTRL <- topTable(fit.main, number=nrow(fit.main), coef="WvsE.CTRL",
                               adjust="fdr")
-head(topTab_WvsE.CTRL)
 ```
 
-### Comparación 2 (WvsE.ASD): Genes diferencialmente expresados con colas poli-A cortas (WASH) frente a colas poli-A largas (ELUTED) en sujetos autistas (ASD).
 ```{r topTab lists WvsE.ASD}
 topTab_WvsE.ASD <- topTable(fit.main, number=nrow(fit.main), coef="WvsE.ASD",
                               adjust="fdr")
-head(topTab_WvsE.ASD)
 ```
 
-### Comparación 3 (INT): Genes que cambian su expresión de forma significativa por interacción entre la condición del sujeto (CONTROL, ASD) y el material examinado (WASH, ELUTED).
 ```{r topTab lists INT}
 topTab_INT <- topTable(fit.main, number=nrow(fit.main), coef="INT",
                               adjust="fdr")
-head(topTab_INT)
 ```
-
-
-Las tablas de este apartado son tan sólo muestras, y la primera columna contiene la ID de las sondas de Affymetrix, no códigos de genes. En el siguiente apartado llevaremos a cabo la anotación de los resultados para poder trabajar con los códigos de los genes en lugar de con las sondas.
-
-# Anotación de los genes
-A partir de los datos extraídos de GPL15207 (gpl_table) vamos a asociar el código de cada sonda al símbolo del gen correspondiente, el nombre del gen y el código de identificación en Entrez; para cada lista de genes diferencialmente expresados.
 
 ```{r anotar toptables}
 # Generate table from GPL with columns of interest
@@ -566,6 +553,10 @@ geneAnots <- gpl_table[, c("ID", "Gene.Title", "Gene.Symbol", "Entrez.Gene")]
 
 anottopTap <- function(x){
   annotated <- merge(geneAnots, x, by.x = "ID", by.y = 0)
+  # Sort by adjusted p.value
+  annotated <- annotated[order(annotated$adj.P.Val), ]
+  # Delete row names
+  rownames(annotated) <- NULL
   return (annotated)
 }
 
@@ -573,13 +564,28 @@ anotopTab_WvsE.CTRL <- anottopTap(topTab_WvsE.CTRL)
 anotopTab_WvsE.ASD <- anottopTap(topTab_WvsE.ASD)
 anotopTab_INT <- anottopTap(topTab_INT)
 ```
+### Comparación 1 (WvsE.CTRL): Genes diferencialmente expresados con colas poli-A cortas (WASH) frente a colas poli-A largas (ELUTED) en sujetos control (CTRL).
 
-Muestra de la tabla WvsE.CTRL anotada:
 ```{r sample annotated WvsE.CTRL}
-head(anotopTab_WvsE.CTRL)
+print(anotopTab_WvsE.CTRL[, c("Gene.Title", "Gene.Symbol", "logFC", "adj.P.Val")],
+     row.names = FALSE)
 ```
 
-# Visualización (volcanoplots)
+### Comparación 2 (WvsE.ASD): Genes diferencialmente expresados con colas poli-A cortas (WASH) frente a colas poli-A largas (ELUTED) en sujetos autistas (ASD).
+```{r sample annotated WvsE.ASD}
+print(anotopTab_WvsE.ASD[, c("Gene.Title", "Gene.Symbol", "logFC", "adj.P.Val")],
+     row.names = FALSE)
+```
+
+### Comparación 3 (INT): Genes que cambian su expresión de forma significativa por interacción entre la condición del sujeto (CONTROL, ASD) y el material examinado (WASH, ELUTED).
+```{r sample annotated INT}
+print(anotopTab_INT[, c("Gene.Title", "Gene.Symbol", "logFC", "adj.P.Val")],
+     row.names = FALSE)
+```
+
+### Visualización (volcanoplots)
+
+Para una visualización de los datos elegimos las gráficas conocidas como volcanoplots. Cada gen está representado por un punto, con los cambios de expresión en el eje de abcisas y los p-valores ajustados en el eje de ordenadas. Se muestra en cada gráfica el nombre de los 5 genes más significativos. La línea roja horizontal corresponde al p-valor = 0.05.
 ```{r volcanoplots, fig.height=12, fig.width=5}
 par(mfrow=c(3, 1))
 
@@ -588,14 +594,19 @@ contrastes <- colnames(fit.main$coefficients)
 for (contrast in 1:length(contrastes)){
   volcanoplot(fit.main, 
               coef = contrastes[contrast],
-              highlight = 10, 
+              highlight = 5, 
               names = eval(str2expression(
                 paste0("anotopTab_", contrastes[contrast], "$Gene.Symbol"))),
               main=paste("Genes diferencialmente expresados", contrastes[contrast],
                          sep = "\n"))
 abline(v=c(-1,1))
+abline(h=-log10(0.05), col="red")
 }
 ```
+
+Sólo examinando las gráficas podemos ver que no tiene sentido examinar los resultados de la comparación por interacción (INT), ya que apenas hay genes con expresión diferencial significativa; y estos, con sólo pequeñas diferencias de expresión.
+
+Sí que son aparentes en cambio las diferencias de expresión significativas en las comparaciones entre "Wash" y "Eluted", aunque sólo con éstas no obtenemos respuesta a la pregunta de si hay diferencias entre "Control" y "ASD". Esto lo exploraremos en los siguientes apartados.
 
 # Comparaciones múltiples
 ¿Qué genes cambian simultáneamente en más de una comparación?
