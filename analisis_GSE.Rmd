@@ -569,12 +569,14 @@ anotopTab_INT <- anottopTap(topTab_INT)
 ```{r sample annotated WvsE.CTRL}
 print(anotopTab_WvsE.CTRL[, c("Gene.Title", "Gene.Symbol", "logFC", "adj.P.Val")],
      row.names = FALSE)
+write.csv2(anotopTab_WvsE.CTRL, file = "results/anotopTab_WvsE.CTRL.csv", row.names = FALSE)
 ```
 
 ### Comparación 2 (WvsE.ASD): Genes diferencialmente expresados con colas poli-A cortas (WASH) frente a colas poli-A largas (ELUTED) en sujetos autistas (ASD).
 ```{r sample annotated WvsE.ASD}
 print(anotopTab_WvsE.ASD[, c("Gene.Title", "Gene.Symbol", "logFC", "adj.P.Val")],
      row.names = FALSE)
+write.csv2(anotopTab_WvsE.ASD, file = "results/anotopTab_WvsE.ASD.csv", row.names = FALSE)
 ```
 
 ### Comparación 3 (INT): Genes que cambian su expresión de forma significativa por interacción entre la condición del sujeto (CONTROL, ASD) y el material examinado (WASH, ELUTED).
@@ -608,8 +610,8 @@ Sólo examinando las gráficas podemos ver que no tiene sentido examinar los res
 
 Sí que son aparentes en cambio las diferencias de expresión significativas en las comparaciones entre "Wash" y "Eluted", aunque sólo con éstas no obtenemos respuesta a la pregunta de si hay diferencias entre "Control" y "ASD". Esto lo exploraremos en los siguientes apartados.
 
-# Comparaciones múltiples
-¿Qué genes cambian simultáneamente en más de una comparación?
+### Comparaciones múltiples
+¿Qué genes cambian simultáneamente en más de una comparación? ¿Cuáles son exclusivos de una comparación?
 ```{r decidetests}
 # as many columns as comparisons and as many rows as genes.
 res <- decideTests(fit.main, method="separate", adjust.method="fdr", p.value=0.1,
@@ -626,14 +628,14 @@ res.selected <- res[sum.res.rows!=0, ]
 print(summary(res))
 ```
 
-## Venn Diagram
+#### Venn Diagram
 ```{r venn diagram, fig.height=4.5, fig.width=4.5}
 vennDiagram(res.selected[, 1:2], cex=0.9)
 title("Genes en común entre dos comparaciones\n Seleccionados con FDR <0.1",
       cex.main=0.9)
 ```
 
-A partir del diagrama de Venn, vemos que 223 genes están diferencialmente expresados sólo en las muestras control, y 627 sólo en las muestras ASD. Son estos dos grupos de genes los que en principio nos interesa explorar.
+A partir del diagrama de Venn, vemos que 223 genes están diferencialmente expresados sólo en las muestras Control, y 627 sólo en las muestras ASD. Son estos dos grupos de genes los que exploraremos para investigar las diferencias entre los grupos Control y ASD.
 
 Otro grupo de genes interesantes serían aquellos cuyo perfil de up/down regulación cambia en muestras de sujetos control y sujetos ASD.
 
@@ -645,21 +647,35 @@ Estos grupos son los que marcarán nuestra lista definitiva de genes de interés
 ## estan up en un grupo y down en el otro
 dif.res.rows <- apply(res.selected, 1, function(x) {x[1] == x[2]})
 res.selected2 <- res.selected[dif.res.rows == FALSE, ]
-print(summary(res.selected2))
+print(summary(res.selected2[, 1:2]))
 
 ```
 
 ```{r venn diagram lista interes, fig.height=4.5, fig.width=4.5}
-vennDiagram(res.selected2[, 1:3], cex=0.9)
+vennDiagram(res.selected2[, 1:2], cex=0.9)
 title("Genes en común entre dos comparaciones\n Seleccionados con FDR <0.1",
       cex.main=0.9)
 ```
 
-En resumen, encontramos 223 genes exclusivamente en sujetos control cuyos ARNm tienen colas diferencialmente largas o cortas.
+En resumen, encontramos 223 genes exclusivamente en sujetos Control cuyos ARNm tienen colas diferencialmente largas o cortas.
 Encontramos 627 genes exclusivamente en sujetos ASD cuyos ARNm tienen colas diferencialmente largas o cortas.
 Ningún gen con diferenciación invertida entre comparaciones.
+```{r tablas listas genes exclusivos}
+write.csv2(geneAnots[geneAnots$ID %in% rownames(res.selected2), ],
+           file = "results/common-differential-genes.csv", row.names = FALSE)
+# Genes diferenciales exclusivos del grupo Control
+res.control <- res.selected2[(res.selected2[,1] != 0) == TRUE, ]
+write.csv2(geneAnots[geneAnots$ID %in% rownames(res.control), ],
+           file = "results/control-differential-genes.csv", row.names = FALSE)
+# Genes diferenciales exclusivos del grupo ASD
+res.ASD <- res.selected2[(res.selected2[,2] != 0) == TRUE, ]
+write.csv2(geneAnots[geneAnots$ID %in% rownames(res.ASD), ],
+           file = "results/ASD-differential-genes.csv", row.names = FALSE)
+```
 
-## Visualización de perfiles de expresión mediante heatmap
+
+
+#### Visualización de perfiles de expresión mediante heatmap
 ```{r seleccion genes para visualizacion perfiles expresion lista interes}
 probesInHeatmap <- rownames(res.selected2)
 HMdata <- eset_filtered[rownames(eset_filtered) %in% probesInHeatmap, ]
@@ -667,16 +683,18 @@ HMdata <- merge(HMdata, geneAnots[, c("ID", "Gene.Symbol")], by.x=0, by.y="ID")
 rownames(HMdata) <- HMdata$Gene.Symbol
 HMdata[, c("Row.names", "Gene.Symbol")] <- NULL
 colnames(HMdata) <- my.targets$X.Abreviado
+no_input_labels <- grep("INPUT", array_labels, value=TRUE, invert = TRUE)
+HMdata <- HMdata[, no_input_labels]
 ```
 ```{r}
 #Colores para ColSideColors:
-colsidecolors <- c("yellow", "orange", "red", "yellow", 
-  "orange", "red", "violet", "blue",
-  "green", "violet", "blue",    "green", 
- "yellow",  "orange", "red", "yellow", 
- "orange", "red", "violet", "blue",   
- "green",  "violet", "blue",    "green", 
- "violet", "blue",    "green" )
+colsidecolors <- c("orange", "red", 
+  "orange", "red", "blue",
+  "green", "blue",    "green", 
+  "orange", "red", 
+ "orange", "red", "blue",   
+ "green",  "blue",    "green", 
+ "blue",    "green" )
 ```
 ```{r Generate heatmap with clustering}
 paleta <- colorRampPalette(c("blue", "red"))(n = 299)
@@ -700,6 +718,15 @@ heatmap.2(as.matrix(HMdata),
           tracecol = NULL,
           srtCol = 30)
 ```
+
+Los mapas de calor (heatmaps) pueden servir para agrupar muestras y genes por similaridad en los patrones de expresión. En este caso, para simplificar, hemos eliminado las muestras del grupo "Input", que no nos están ofreciendo información útil.
+
+Al igual que ocurría al examinar los componentes principales y el dendrograma, las muestras se agrupan sobre todo por material ("Wash" y "Eluted"). Dentro del grupo "Wash", sí que parece haber una separación entre "Control" y "ASD" (derecha del gráfico).
+
+Clave de color para las muestras:
+Control-Wash: naranja ASD-Wash: azul
+Control-Eluted: rojo ASD-Eluted: verde
+
 
 # Significatividad biológica
 
