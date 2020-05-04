@@ -4,10 +4,11 @@ subtitle: "Análisis Datos Ómicos - PEC 1"
 author: "Jorge Vallejo Ortega"
 date: '`r format(Sys.Date(),"%e de %B, %Y")`'
 output:
-  html_document:
-    toc: true
+ # html_document:
+  #  toc: true
   pdf_document:
-      toc: true
+    latex_engine: xelatex
+    toc: true
 # Next code for knitting both types of documents automatically comes from https://stackoverflow.com/questions/39662365/knit-one-markdown-file-to-two-output-files/53280491#53280491
 knit: (function(inputFile, encoding) {
   rmarkdown::render(inputFile, encoding = encoding,
@@ -15,14 +16,17 @@ knit: (function(inputFile, encoding) {
   output_dir = "results") })
 # And:
 # https://stackoverflow.com/a/46007686/10647267
-
+bibliography: references.bib
 ---
 
 ```{r setup, include=FALSE}
 # knitr options
 
 # Do not display code in output document
-knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(echo = FALSE,
+                      message = FALSE,
+                      warning = FALSE,
+                      fig.align = "center")
 
 # This is a try:
 knitr::opts_knit$set(stop_on_error = 2L)
@@ -32,9 +36,9 @@ knitr::opts_knit$set(stop_on_error = 2L)
 # complete script.
 ```
 
-# Abstract
+# Sumario
+Se cree que un gen, o una familia de genes, cuya función afecta a la poliadenilación del ARNm podría estar implicado en el riesgo de sufrir el trastorno de espectro autista (ASD). El examen mediante microarray de genes cuyo ARN tiene patrones de poliadenilación diferentes entre muestras de cerebro humano control, y muestras de personas con ASD, apunta a que genes implicados en el riesgo de ASD presentan estos patrones de poliadenilación diferencial con más frecuencia de lo que sería esperado por azar.
 
-XXX Falta por incluir XXX
 
 ```{r estructura de directorios}
 # Directory for raw data
@@ -49,65 +53,68 @@ if (!(dir.exists("results"))){
 if (!(dir.exists("intermediateResults"))){
   dir.create("intermediateResults")
 }
+# Directory for images
+if (!(dir.exists("images"))){
+  dir.create("images")
+}
 ```
 
 # Objetivos
 
-El objetivo, dentro del trabajo original XXX insertar referencia XXX, es estudiar el acortamiento (deadenilación) de la cola poli-A en ARNm de genes asociados al riesgo de desarrollar trastorno del espectro autista ("autism spectrum disorder", ASD).
+El objetivo, dentro del trabajo original [@parras2018autism], es estudiar el acortamiento (deadenilación) de la cola poli-A, provocada por las proteínas CPEB1-4 (_cytoplasmic polyadenylation element binding proteins_) en ARNm de genes asociados al riesgo de desarrollar trastorno del espectro autista ("autism spectrum disorder", ASD).
 
-Mi objetivo en este análisis es, a partir de los datos de expresión detectados por las microarrays, extraer un listado de genes cuyos ARNm contengan una cola poli-A más larga, o más corta, al comparar muestras de sujetos control con muestras de sujetos con ASD. Una vez obtenido el listado, el objetivo final es averiguar qué términos de la ontología génica están significativamente enriquecidos en esa lista de genes.
+Mi objetivo en este análisis es, a partir de los datos de expresión detectados por las microarrays, extraer un listado de genes cuyos ARNm contengan una cola poli-A más larga, o más corta, al comparar muestras de sujetos control con muestras de sujetos con ASD. Una vez obtenido el listado, el objetivo final es averiguar, primero, qué términos de la ontología génica están significativamente enriquecidos en esa lista de genes. Y segundo, si nuestra lista de genes contiene más genes asociados al riesgo de ASD de lo que sería esperable por azar.
 
 # Materiales y métodos
 
 ## Muestras y datos de origen
 El material biológico de partida fueron muestras post-mórtem de córtex prefrontal de pacientes con trastorno del espectro autista (n = 5) y de controles (n = 4), todos ellos varones de 5-23 años de edad. A partir de las muestras de tejido se extrajo el ARN total. De cada muestra de ARN total se guardó una alíquota ("Input"), y el resto se separó por cromatografía en un fracción enriquecida en ARNm con colas poli-A largas ("Wash") y otra enriquecida en ARNm con colas poli-A cortas ("Eluted"). Las muestras de ARN fueron traducidas a ADNc, y este amplificado.
 
-Las muestras de ADNc fueron hibridadas en arrays GeneChip Human PrimeView (Affymetrix, 901838); estos fueron leídos en un GeneChip Scanner GCS3000 (Affymetrix), y mediante Command Console (Affymetrix) los datos se almacenaron en archivos CEL. Estos archivos CEL, descargados desde XXX referencia a la web en GEO XXX han sido la base para el presente análisis. Los datos usados en la anotación de los resultados proceden de XXX enlace al archivo GPL XXX.
+Las muestras de ADNc fueron hibridadas en arrays GeneChip Human PrimeView (Affymetrix, 901838); estos fueron leídos en un GeneChip Scanner GCS3000 (Affymetrix), y mediante Command Console (Affymetrix) los datos se almacenaron en archivos CEL. Estos archivos CEL base del presente análisis, y los datos necesarios para realizar la anotación de los genes destacados, fueron descargados desde la web de Gene Expression Omnibus (GEO) [@clough2016gene].
 
 ## Diseño experimental
 
 El conjunto de 27 ficheros CEL (cada uno procedente de una microarray) se puede clasificar según la condición del sujeto de origen ("Control" o "ASD"), y según el enriquecimiento en diferentes longitudes de colas poli-A en los ARNm ("Input", "Wash", o "Eluted").
 
-Por combinación de ambas variables podemos dividir las muestras en seis grupos experimentales:
-Control-Input
-Control-Wash
-Control-Eluted
+Por combinación de ambas variables podemos dividir las muestras en seis grupos experimentales:  
 
-ASD-Input
-ASD-Wash
-ASD-Eluted
+|Control-Input|ASD-Input|
+|Control-Wash|ASD-Wash|
+|Control-Eluted|ASD-Eluted|
 
 Las muestras "Input" contienen el ARN total. Si comparamos las muestras Control-Input con las muestras ASD-Input, comprobaremos si podemos detectar expresión diferencial entre las condiciones Control y ASD.
 
-Las muestras "Wash" están enriquecidas en ARN de cola poli-A corta, y las muestras "Eluted" en ARN de cola poli-A larga. Podemos hacer las siguientes comparaciones:
-Control-Wash vs Control-Eluted: Qué genes se transcriben a ARN de diferentes longitudes de cola poli-A en sujetos Control.
+Las muestras "Wash" están enriquecidas en ARN de cola poli-A corta, y las muestras "Eluted" en ARN de cola poli-A larga. Podemos hacer las siguientes comparaciones:  
 
-ASD-Wash vs ASD-Eluted: Qué genes se transcriben a ARN de diferentes longitudes de cola poli-A en sujetos Control.
+- Control-Wash vs Control-Eluted: Qué genes se transcriben a ARN de diferentes longitudes de cola poli-A en sujetos Control.
 
-Comparando los listados de genes de las dos comparaciones anteriores obtendremos un listado de los genes que se comportan de forma diferente en sujetos Control y sujetos ASD con respecto a las colas poli-A de sus ARN.
+- ASD-Wash vs ASD-Eluted: Qué genes se transcriben a ARN de diferentes longitudes de cola poli-A en sujetos Control.
+
+- Comparando los listados de genes de las dos comparaciones anteriores obtendremos un listado de los genes que se comportan de forma diferente en sujetos Control y sujetos ASD con respecto a las colas poli-A de sus ARN.
 
 ## Procedimiento seguido en el análisis
 
-Los pasos seguidos para realizar el presente análisis han sido los siguientes:
-1. Obtenión de los datos de expresión en bruto.
-2. Control de calidad de los datos brutos.
-3. Normalización.
-4. Control de calidad de los datos normalizados.
-5. Filtraje no específico.
-6. Identificación de genes diferencialmente expresados.
-7. Anotación de los resultados.
-8. Comparación entre comparaciones.
+Los pasos seguidos para realizar el presente análisis han sido los siguientes: 
+
+1. Obtenión de los datos de expresión en bruto.  
+2. Control de calidad de los datos brutos.  
+3. Normalización.  
+4. Control de calidad de los datos normalizados.  
+5. Filtraje no específico.  
+6. Identificación de genes diferencialmente expresados.  
+7. Anotación de los resultados.  
+8. Comparación entre comparaciones.  
 9. Análisis del enriquecimiento de rutas.
 
 ### Obtención de los datos en bruto
 
-Los datos en bruto usados en el análisis ha sido descargados de Gene Expression Omnibus, un repositorio público de datos de genómica funcional, donde los datos están catalogados bajo el código de acceso GSE113834 XXX inserta enlace XXX.
+Los datos en bruto usados en el análisis ha sido descargados de Gene Expression Omnibus, un repositorio público de datos de genómica funcional, donde los datos están catalogados bajo el código de acceso [GSE113834](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE113834).
 
 Los datos de expresión han sido descargados de dicho repositorio en forma de ficheros CEL.
 
 La relación entre cada fichero y el grupo experimental al que pertenece se ha extraido de la tabla "Samples", accesible en la misma página web que los ficheros CEL.
 
-Los datos de anotación correspondientes al modelo de array usado, están catalogados en el repositorio GEO bajo el código de acceso GPL15207 XXX insertar enlace XXX. Dichos datos han sido descargados en forma de fichero de texto, y usados para anotar los datos obtenidos de las sondas de las arrays.
+Los datos de anotación correspondientes al modelo de array usado, están catalogados en el repositorio GEO bajo el código de acceso [GPL15207](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GPL15207). Dichos datos han sido descargados en forma de fichero de texto, y usados para anotar los datos obtenidos de las sondas de las arrays.
 
 ```{r prepare data from CEL files, eval=FALSE}
 GSE_address <- "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE113834"
@@ -170,7 +177,7 @@ library(knitr)
 
 ```
 
-```{r construct targets file, eval=FALSE}
+```{r construct targets file}
 # List of CEL files
 library('oligo')
 celFiles <- list.celfiles("data", full.names=TRUE)
@@ -188,20 +195,12 @@ rawData <- read.affybatch(filenames = celFiles,
                           phenoData = my.targets)
 ```
 
-Los diferentes archivos con los datos en bruto han sido manipulados utilizando R para realizar los controles de calidad y los análisis propiamente dichos. El código completo usado puede consultarse en el apéndice. XXX modifica párrafo según sea necesario XXX
+Los diferentes archivos con los datos en bruto han sido manipulados utilizando R para realizar los controles de calidad y los análisis propiamente dichos. El código completo usado puede consultarse en el apéndice A.
 
 ### Control de calidad de los datos en bruto
 Con el control de calidad pretendemos averiguar si los datos de alguna de las muestras presentan defectos o sesgos que desaconsejen usarlos, antes de continuar con el análisis.
 
 En este caso hemos usado examinado los datos de expresión mediante diferenes representaciones gráficas, en busca de anomalías.
-
-XXX Si finalmente no usas el paquete ArrayQualityMetrics, elimina esta parte XXX
-En esta ocasión usaremos el paquete de análisis ArrayQualityMetrics.
-
-```{r control de calidad con ArrayQualityMetrics, eval=FALSE}
-library(arrayQualityMetrics)
-arrayQualityMetrics(rawData)
-```
 
 ```{r re-used variables}
 # Labels for each sample
@@ -215,7 +214,7 @@ graph_colours <- rainbow(length(array_labels))
 
 Los gráficos de densidad nos informan acerca de la forma y posición de las señales sin normalizar.
 
-```{r grafico de densidad}
+```{r grafico de densidad, fig.cap= "Gráfico de densidad de las señales sin normalizar. Los colores no son significativos."}
 hist(rawData, col = graph_colours,
      main="Densidad de la señal en bruto",
      ylab="Densidad", xlab= "log Intensidad")
@@ -230,7 +229,7 @@ Este caso vemos que la curva de densidad es similar en todas las muestras, sin m
 
 El gráfico de diagrama de cajas nos permite comparar la distribución de la intensidad entre las diferentes muestras.
 
-```{r boxplot}
+```{r boxplot, fig.cap="Diagrama de cajas de la intensidad de las muestras sin normalizar. Los colores no son significativos"}
 boxplot(rawData,
         names=array_labels,
         cex.axis=0.5, las=2, which="both",
@@ -244,7 +243,7 @@ Podemos ver que ninguna de las muestras destaca entre el resto. Hay pequeñas va
 
 El dendrograma nos ayuda a representar cómo se agrupan las muestras, y da pistas acerca de cuál es el factor experimental que determina las diferencias entre muestras. Aquellas muestras con datos más similares aparecerán agrupadas.
 
-```{r dendrograma, fig.height=5, fig.width=8}
+```{r dendrograma, fig.height=5, fig.width=8, fig.cap="Dendrograma agrupando las muestras a partir de los datos de intensidad sin normalizar."}
 # Calcular matriz de distancias
 if(file.exists("intermediateResults/dist_matrix.RData")){
   load("intermediateResults/dist_matrix.RData")
@@ -297,7 +296,7 @@ El análisis de componentes principales nos puede servir para detectar si las mu
  }
 ```
 
-```{r componentes ppales}
+```{r componentes ppales, fig.cap= "Gráfica de componentes principales a partir de los datos de intensidad sin normalizar. Atención a la muestra CTRL-1 INPUT en la esquina superior izquierda."}
 plotPCA3(exprs(rawData), labels = array_labels,
          factor = pData(rawData)$X.Grupo, title="Datos brutos",
          scale = FALSE, size = 3, colores = rainbow(6))
@@ -314,19 +313,25 @@ La muestra "CTRL-1 INPUT" aparece alejada, no sólo de las otras muestras del gr
 Examinar la imagen del array nos permite hacer una evaluación de calidad a nivel "macro". Nos permite hacer una estimación a ojo de características como el balance del color, la uniformidad en la hibridación y en los spots, si el background es mayor de lo normal y la existencia de artefactos como el polvo o pequeñas marcas (rasguños).
 
 
-```{r array image, fig.height=32, fig.width=12}
+```{r array image, fig.height=32, fig.width=12, eval=FALSE}
 #pseudo image of the weights for the first arrays in the dataset
+jpeg(filename = "images/image_arrays.jpeg", width = 12, height = 32, units = "in", res = 72)
 par(mfrow=c(9,3))
 for (num in 1:length(array_labels)){
   image(rawData[, num], main = array_labels[num])
 }
+dev.off()
 ```
+```{r inserta imagenes array, fig.cap="Imágenes de cada array a partir de los datos sin normalizar. No se detectan anormalidades."}
+knitr::include_graphics("images/image_arrays.jpeg")
+```
+
 
 A simple vista no se observa ningún gran defecto como roturas, burbujas o manchas.
 
-En ninguna de las gráficas hemos encontrado señales que nos hagan desconfiar de la calidad de ninguna de las muestras. La única excepción podría ser la muestra "CTRL-1 INPUT" en la gráfica de componentes principales; pero en el resto de gráficas no destaca de ninguna forma, así que la incluiremos con las demás en el resto del análisis.
+**Como conclusión del control de calidad de datos brutos**, podemos decir que en ninguna de las gráficas hemos encontrado señales que nos hagan desconfiar de la calidad de ninguna de las muestras. La única excepción podría ser la muestra "CTRL-1 INPUT" en la gráfica de componentes principales; pero en el resto de gráficas no destaca de ninguna forma, así que la incluiremos con las demás en el resto del análisis.
 
-## Normalización de los datos
+### Normalización de los datos
 
 Antes de empezar el análisis de expresión es necesario procesar los datos brutos de forma que los datos de las diferentes muestras (micorarrays) sean comparables. El proceso de normalización intenta asegurarse de que las diferencias de intensidad reflejen la expresión diferencial de los genes, eliminando sesgos producidos por razones técnicas.
 
@@ -344,15 +349,15 @@ if(file.exists(eset_rma_file)){
 }
 ```
 
-## Control de calidad sobre datos normalizados
+### Control de calidad sobre datos normalizados
 
 Después de la normalización volvemos a realizar un control de calidad, para comprobar que el resultado de la normalización ha producido el efecto esperado en la distribución de los datos.
 
-### Diagrama de cajas
+#### Diagrama de cajas
 
 Con gráfico de diagrama de cajas volvemos a comparar la distribución de la intensidad entre las diferentes muestras.
 
-```{r boxplot datos normalizados}
+```{r boxplot datos normalizados, fig.cap="Diagrama de cajas de la distribución de intensidad, ya normalizada, de las muestras. Los colores no son significativos."}
 boxplot(eset_rma,
         names=array_labels,
         cex.axis=0.5, las=2,
@@ -366,7 +371,7 @@ Si lo comparamos con el gráfico de antes de normalizar, en éste la distribuci�
 
 El análisis de componentes principales nos puede servir para detectar si las muestras se agrupan con otras muestras procedentes del mismo grupo o si no hay correspondencia entre muestras del mismo grupo.
 
-```{r componentes ppales datos normalizados}
+```{r componentes ppales datos normalizados, fig.cap="Gráfica de componentes principales creada a partir de los datos de intensidad normalizados."}
 # Expression data from eset_rma will be used several times along the code
 exprs_eset_rma <- exprs(eset_rma)
 
@@ -383,7 +388,7 @@ Un cambio notable en el diagrama de componentes es prinpales es la posición de 
 
 En conclusión, podríamos decir que la normalización de los datos ha producido el efecto esperado y no encontramos impedimento para proceder al análisis de los datos.
 
-## Filtraje no específico
+### Filtraje no específico
 
 Antes del análisis estadístico, para eliminar ruido y mejorar la sensibilidad, hemos eliminado datos procedentes de sondas que no aportan información o que pueden aportar información duplicada o confuso.
 
@@ -471,13 +476,13 @@ filtered_probes <- nondup_probes[nondup_probes$IQR > median_IQR, ]
 
 Número inicial de sondas: `r format(nrow(exprs_eset_rma), big.mark= " ")`
 
-Sondas de control de calidad: `r length(QCprobes)`
-Sondas sin anotación: `r length(no_entrez)`
-Sondas duplicadas: `r sum(dup_entrez)`
-Sondas que corresponden a más de un gen:`r format(length(multGenes), big.mark=" ")`
+Sondas de control de calidad: `r length(QCprobes)`  
+Sondas sin anotación: `r length(no_entrez)`  
+Sondas duplicadas: `r sum(dup_entrez)`  
+Sondas que corresponden a más de un gen:`r format(length(multGenes), big.mark=" ")`  
 Sondas excluidas por baja variabilidad: `r format(nrow(nondup_probes)-nrow(filtered_probes), big.mark= " ")`
 
-Número de sondas para siguientes análisis: `r format(nrow(filtered_probes), big.mark= " ")`
+Número de sondas restantes para análisis de expresión diferencial: `r format(nrow(filtered_probes), big.mark= " ")`
 
 ```{r modify eset_rma with filtered data}
 # Merge filtered probes with expression data
@@ -493,9 +498,9 @@ save(eset_filtered, file="intermediateResults/eset_filtered.RData")
 ## No puedo o no se como hacerlo
 ```
 
-## Identificación de genes diferencialmente expresados
+### Identificación de genes diferencialmente expresados
 
-Para el análisis de este ensayo, consideramos una matriz de diseño siguiendo un modelo de un factor con seis niveles, siendo esos niveles los grupos a los que está asignada cada muestra:
+Para el análisis de este ensayo, consideramos una matriz de diseño siguiendo un modelo de un factor con seis niveles, siendo esos niveles los grupos a los que está asignada cada muestra:  
 `r unique(targets$Grupo)`
 
 ```{r matriz de diseño}
@@ -505,11 +510,11 @@ colnames(designMat) <- levels(targets$Grupo)
 rownames(designMat) <- targets$Abreviado
 ```
 
-Para cumplir con el objetivo del estudio, el interés entá en averiguar qué genes presentan cambios significativos entre las muestras "Wash" y las muestras "Eluted". Y además, si esos cambios significativos se mantienen entre los grupos "Control" y "ASD".
+Para cumplir con el objetivo del estudio, el interés se encuentra en averiguar qué genes presentan cambios significativos entre las muestras "Wash" y las muestras "Eluted". Y además, si esos cambios significativos se mantienen entre los grupos "Control" y "ASD".
 
 Para replicar ese razonamiento, hemos organizado los siguientes contrastes:
 
-WASH vs ELUTED en sujetos CONTROL
+WASH vs ELUTED en sujetos CONTROL  
 WASH vs ELUTED en sujetos ASD
 
 También podría valer la pena comprobar si hay interacción entre condición y material.
@@ -528,7 +533,7 @@ fit.main <- contrasts.fit(fit, cont.matrix)
 fit.main <- eBayes(fit.main)
 ```
 
-## Anotación de las listas de genes
+### Anotación de las listas de genes
 
 A continuación presentamos una muestra de las listas de genes diferencialmente expresados para cada comparación, incluyendo el símbolo y nombre de cada gen, ordenados por p-valor ajustado.
 
@@ -564,31 +569,33 @@ anotopTab_WvsE.CTRL <- anottopTap(topTab_WvsE.CTRL)
 anotopTab_WvsE.ASD <- anottopTap(topTab_WvsE.ASD)
 anotopTab_INT <- anottopTap(topTab_INT)
 ```
-### Comparación 1 (WvsE.CTRL): Genes diferencialmente expresados con colas poli-A cortas (WASH) frente a colas poli-A largas (ELUTED) en sujetos control (CTRL).
 
 ```{r sample annotated WvsE.CTRL}
-print(anotopTab_WvsE.CTRL[, c("Gene.Title", "Gene.Symbol", "logFC", "adj.P.Val")],
-     row.names = FALSE)
+anotopTab_WvsE.CTRL$adj.P.Val <- format(anotopTab_WvsE.CTRL$adj.P.Val, digits = 4)
+knitr::kable(anotopTab_WvsE.CTRL[1:6, c("Gene.Title", "Gene.Symbol", "logFC", "adj.P.Val")],
+     row.names = FALSE, scientific = TRUE,
+     caption = "Comparación 1 (WvsE.CTRL): Genes diferencialmente expresados con colas poli-A cortas (WASH) frente a colas poli-A largas (ELUTED) en sujetos control (CTRL).")
 write.csv2(anotopTab_WvsE.CTRL, file = "results/anotopTab_WvsE.CTRL.csv", row.names = FALSE)
 ```
 
-### Comparación 2 (WvsE.ASD): Genes diferencialmente expresados con colas poli-A cortas (WASH) frente a colas poli-A largas (ELUTED) en sujetos autistas (ASD).
+
 ```{r sample annotated WvsE.ASD}
-print(anotopTab_WvsE.ASD[, c("Gene.Title", "Gene.Symbol", "logFC", "adj.P.Val")],
-     row.names = FALSE)
+anotopTab_WvsE.ASD$adj.P.Val <- format(anotopTab_WvsE.ASD$adj.P.Val, digits = 4)
+knitr::kable(anotopTab_WvsE.ASD[1:6, c("Gene.Title", "Gene.Symbol", "logFC", "adj.P.Val")],
+     row.names = FALSE, caption = "Comparación 2 (WvsE.ASD): Genes diferencialmente expresados con colas poli-A cortas (WASH) frente a colas poli-A largas (ELUTED) en sujetos autistas (ASD).")
 write.csv2(anotopTab_WvsE.ASD, file = "results/anotopTab_WvsE.ASD.csv", row.names = FALSE)
 ```
 
-### Comparación 3 (INT): Genes que cambian su expresión de forma significativa por interacción entre la condición del sujeto (CONTROL, ASD) y el material examinado (WASH, ELUTED).
 ```{r sample annotated INT}
-print(anotopTab_INT[, c("Gene.Title", "Gene.Symbol", "logFC", "adj.P.Val")],
-     row.names = FALSE)
+knitr::kable(anotopTab_INT[1:6, c("Gene.Title", "Gene.Symbol", "logFC", "adj.P.Val")],
+     row.names = FALSE, digits = 4, scientific = TRUE,
+     caption = " Comparación 3 (INT): Genes que cambian su expresión de forma significativa por interacción entre la condición del sujeto (CONTROL, ASD) y el material examinado (WASH, ELUTED).")
 ```
 
-### Visualización (volcanoplots)
+#### Visualización (volcanoplots)
 
-Para una visualización de los datos elegimos las gráficas conocidas como volcanoplots. Cada gen está representado por un punto, con los cambios de expresión en el eje de abcisas y los p-valores ajustados en el eje de ordenadas. Se muestra en cada gráfica el nombre de los 5 genes más significativos. La línea roja horizontal corresponde al p-valor = 0.05.
-```{r volcanoplots, fig.height=12, fig.width=5}
+Para la visualización de estos datos elegimos las gráficas conocidas como volcanoplots. Cada gen está representado por un punto, con los cambios de expresión en el eje de abcisas y los p-valores ajustados en el eje de ordenadas. Se muestra en cada gráfica el nombre de los 5 genes más significativos. La línea roja horizontal corresponde al p-valor = 0.05.
+```{r volcanoplots, fig.height=12, fig.width=5, fig.cap= "Volcanoplots de cada una de las listas anotadas de genes en cada una de las comparaciones. Se muestra en cada gráfica en nombre de los 5 genes más significativos. La línea roja horizontal corresponde al p-valor = 0.05."}
 par(mfrow=c(3, 1))
 
 contrastes <- colnames(fit.main$coefficients)
@@ -611,7 +618,8 @@ Sólo examinando las gráficas podemos ver que no tiene sentido examinar los res
 Sí que son aparentes en cambio las diferencias de expresión significativas en las comparaciones entre "Wash" y "Eluted", aunque sólo con éstas no obtenemos respuesta a la pregunta de si hay diferencias entre "Control" y "ASD". Esto lo exploraremos en los siguientes apartados.
 
 ### Comparaciones múltiples
-¿Qué genes cambian simultáneamente en más de una comparación? ¿Cuáles son exclusivos de una comparación?
+Debido al diseño experimental y el objetivo del estudio, el interés final no está sencillamente en las listas de genes diferencialmente poliadenilados. Lo que queremos conocer es, de aquellos ARN que presentan diferencias de poliadenilación, cuáles son exclusivos del grupo "Control" y cuáles del grupo "ASD".
+
 ```{r decidetests}
 # as many columns as comparisons and as many rows as genes.
 res <- decideTests(fit.main, method="separate", adjust.method="fdr", p.value=0.1,
@@ -619,7 +627,7 @@ res <- decideTests(fit.main, method="separate", adjust.method="fdr", p.value=0.1
 # This table can be annotated and saved as a csv file, for example
 ```
 
-En la tabla de comparaciones múltiples, cada gen sobreexpresado está marcado con un 1, un 0 si no hay cambio significativo o un -1 si está downregulado.
+Podemos hacer primero una comparación cuantitativa entre las comparaciónes; cuántos genes diferenciales son exclusivos de una de las comparaciones y cuántos son comunes.
 
 Resumen de los resultados:
 ```{r resumen comparaciones multiples}
@@ -628,18 +636,18 @@ res.selected <- res[sum.res.rows!=0, ]
 print(summary(res))
 ```
 
-#### Venn Diagram
+#### Diagrama de Venn
 ```{r venn diagram, fig.height=4.5, fig.width=4.5}
 vennDiagram(res.selected[, 1:2], cex=0.9)
 title("Genes en común entre dos comparaciones\n Seleccionados con FDR <0.1",
       cex.main=0.9)
 ```
 
-A partir del diagrama de Venn, vemos que 223 genes están diferencialmente expresados sólo en las muestras Control, y 627 sólo en las muestras ASD. Son estos dos grupos de genes los que exploraremos para investigar las diferencias entre los grupos Control y ASD.
+A partir del diagrama de Venn, vemos que **223** genes están diferencialmente poliadenilados sólo en las muestras "Control", y **627** sólo en las muestras "ASD". Son estos dos grupos de genes los que exploraremos para investigar las diferencias entre los grupos "Control" y "ASD".
 
 Otro grupo de genes interesantes serían aquellos cuyo perfil de up/down regulación cambia en muestras de sujetos control y sujetos ASD.
 
-Estos grupos son los que marcarán nuestra lista definitiva de genes de interés.
+Estos tres grupos son los que marcarán nuestra lista definitiva de genes de interés.
 
 ```{r lista definitiva interes}
 # Solo nos interesan aquellos genes que:
@@ -657,9 +665,9 @@ title("Genes en común entre dos comparaciones\n Seleccionados con FDR <0.1",
       cex.main=0.9)
 ```
 
-En resumen, encontramos 223 genes exclusivamente en sujetos Control cuyos ARNm tienen colas diferencialmente largas o cortas.
-Encontramos 627 genes exclusivamente en sujetos ASD cuyos ARNm tienen colas diferencialmente largas o cortas.
-Ningún gen con diferenciación invertida entre comparaciones.
+En resumen, encontramos **223** genes exclusivamente en sujetos "Control2 cuyos ARNm tienen colas diferencialmente largas o cortas.  
+Encontramos **627** genes exclusivamente en sujetos "ASD" cuyos ARNm tienen colas diferencialmente largas o cortas.  
+**Ningún** gen con diferenciación invertida entre comparaciones.
 ```{r tablas listas genes exclusivos}
 write.csv2(geneAnots[geneAnots$ID %in% rownames(res.selected2), ],
            file = "results/common-differential-genes.csv", row.names = FALSE)
@@ -723,37 +731,183 @@ Los mapas de calor (heatmaps) pueden servir para agrupar muestras y genes por si
 
 Al igual que ocurría al examinar los componentes principales y el dendrograma, las muestras se agrupan sobre todo por material ("Wash" y "Eluted"). Dentro del grupo "Wash", sí que parece haber una separación entre "Control" y "ASD" (derecha del gráfico).
 
-Clave de color para las muestras:
-Control-Wash: naranja ASD-Wash: azul
+Clave de color para las muestras:  
+Control-Wash: naranja ASD-Wash: azul  
 Control-Eluted: rojo ASD-Eluted: verde
 
 
-# Significatividad biológica
+### Significatividad biológica
 
-Usaremos _clusterProfiler_ para esta parte del informe.
+Una vez tenemos nuestras listas de genes anotadas, un herramienta más para interpretar los resultados del estudio es el examen de la significatividad biológica. En este informe, lo que hemos hecho es, a partir de las listas de genes con comportamiento diferencial para las condiciones "Control" y "ASD", comprobar si existen funciones, procesos biológicos o rutas moleculares que aparezcan con más frecuencias en estas listas que en el resto de genes analizados.
 
-En primer lugar preparamos la lista de genes a analizar:
+Como listas de genes hemos utilizado las siguientes:  
+**Común** - lista completa de genes con comportamiento diferencias en grupo "Control" frente a "ASD".  
+**Control** - lista de genes con comportamiento diferencial exclusivos del grupo "Control" (es un subset de la lista "Común").  
+**ASD** - lista de genes con comportamiento diferencial exclusivos del grupo "ASD" (es un subset de la lista "Común").
+
+**Universo** - lista de todos los genes detectables con el modelo de array usado en este estudio.
+
 ```{r lista para significatividad biologica}
 
 # Vector of EntrezIDs from the list of genes of interest (probesInHeatmap)
 geneList <- geneAnots[geneAnots$ID %in% probesInHeatmap, 4]
+geneListControl <- as.character(read.csv2("results/control-differential-genes.csv")[, 4])
+geneListASD <- as.character(read.csv2("results/ASD-differential-genes.csv")[, 4])
 universe <- nondup_probes$Entrez.Gene
 ```
+
+#### Test de sobrerrepresentación de términos GO
+
+El análisis estadístico lo hemos realizado con la función _enrichGO()_ del paquete _clusterProfiler_ para el lenguaje R. Esta función devuelve un listado de términos GO estadísticamente más representados en nuestra lista de genes, con respecto a la lista Universo.
+
 ```{r test de sobrerrepresentacion}
 library(clusterProfiler)
 library(org.Hs.eg.db)
 # As universe, I will use all genes represented in the microarray
 # before filtering by IQR
-ego <- enrichGO(gene = geneList,
+ego <- enrichGO(gene = geneListControl,
                 universe = universe,
                 OrgDb = org.Hs.eg.db,
-                ont = "BP",
+                ont = "CC",
                 pAdjustMethod = "BH",
-                pvalueCutoff = 0.01,
-                qvalueCutoff = 0.05,
+                pvalueCutoff = 0.05,
+                qvalueCutoff = 0.2,
                 readable = TRUE)
 
 save(ego, file="intermediateResults/ego.RData")
+```
+
+Para un valor de corte del p-valor de 0.05, y valor de corte del q-valor de 0.2; no se ha encontrado **ningún** término GO estadísticamente más representado en ninguna de las tres listas con respecto a la lista Universo.
+
+#### Gene Set Enrichment Analysis
+
+Este tipo de análisis está especializado en detectar situaciones en las que las diferencias de expresión son pequeñas, pero coordinadas para un grupo de genes relacionados. En este informe hemos utilizado la función _gseGO_ del paquete _cluseterProfiler_ para realizar este análisis.
+```{r Gene Set Enrichment Analysis}
+gse_list_ctrl_raw <- anotopTab_WvsE.CTRL[anotopTab_WvsE.CTRL$ID %in% rownames(res.control), ]
+gse_list_ctrl_raw["abs.logFC"] <- abs(gse_list_ctrl_raw[, "logFC"])
+gse_list_ctrl_raw <- gse_list_ctrl_raw[order(gse_list_ctrl_raw$abs.logFC, decreasing = TRUE),
+                               c("abs.logFC", "Entrez.Gene")]
+gse_list_ctrl <- gse_list_ctrl_raw[, "abs.logFC"]
+names(gse_list_ctrl) <- as.character(gse_list_ctrl_raw[, c("Entrez.Gene")])
+
+gse_list_asd_raw <- anotopTab_WvsE.ASD[anotopTab_WvsE.ASD$ID %in% rownames(res.ASD), ]
+gse_list_asd_raw["abs.logFC"] <- abs(gse_list_asd_raw[, "logFC"])
+gse_list_asd_raw <- gse_list_asd_raw[order(gse_list_asd_raw$abs.logFC, decreasing = TRUE),
+                               c("abs.logFC", "Entrez.Gene")]
+gse_list_asd <- gse_list_asd_raw[, "abs.logFC"]
+names(gse_list_asd) <- as.character(gse_list_asd_raw[, c("Entrez.Gene")])
+
+ego2 <- gseGO(geneList = gse_list_ctrl,
+              OrgDb = org.Hs.eg.db,
+              ont = "MF")
+
+ego3 <- gseGO(geneList = gse_list_asd,
+              OrgDb = org.Hs.eg.db,
+              ont = "CC")
+```
+
+El resultado ha sido el mismo que en el análisis anterior. No se ha detectado ningún grupo de genes especialmente representado en el listado de nuestros genes de interés con ARN diferencialmente poliadenilados.
+
+#### Representación en la base de datos SFARI
+```{r descargando la base de datos, eval=FALSE}
+sfari_url <- "https://gene.sfari.org//wp-content/themes/sfari-gene/utilities/download-csv.php?api-endpoint=genes"
+download.file(url= sfari_url, destfile = "data/sfari.csv", method = 'curl')
+```
+
+[SFARI Gene](https://gene.sfari.org/) es una base de datos al servicio de la investigación del autismo, centrada en genes implicados en susceptibilidad a dicho síndrome[@sfari2019human]. Parte de la información que integra está compuesta por el módulo Human Gene, un set de datos que recopila centenares de genes humanos potencialmente relacionados con el ASD.  
+
+Como un último intento de investigar la significatividad biológica de nuestra lista de genes diferencialmente poliadenilados entre los grupos "Control" y "ASD", hemos comparado dicha lista con la lista de genes en el módula Human Gene de SFARI y extraído los genes que aparecen en ambas listas. Posteriormente, mediante simulaciones, hemos comprobado la probabilidad de obtener esa misma cantidad de genes muestreando al azar la lista total de genes que pueden detectarse con el modelo de array usado en el estudio.
+
+El proceso de simulación ha consistido en, primeramente, extraer el mismo número de genes (`r length(geneList)`) que aparecen en nuestra lista de genes diferencialmente poliadenilados de entre la lista de genes que pueden ser detectados mediante el array (`r format(length(nondup_probes$Entrez.Gene), big.mark= " ")`. Después se ha comparado la lista aleatoria resultante con la lista de genes SFARI para averiguar la cantidad de genes en común. El proceso se ha repetido 100 000 veces.
+
+```{r read sfari database}
+sfari_dataframe <- read.csv(file = "data/SFARI-Gene_genes_05-01-2020release_05-03-2020export.csv",
+                            stringsAsFactors = FALSE)
+# Limit to columns of interest:
+## gene.symbol
+## gene.name
+## ensembl.id
+## syndromic: see sfari website for meaning
+sfari_dataframe <- sfari_dataframe[, c(2, 3, 4, 8)]
+
+tradu_entrez_ensembl <- gpl_table[, c("Gene.Symbol", "Entrez.Gene")]
+
+# Filter out duplicates in EntrezID columns
+dup_tradu <- duplicated(tradu_entrez_ensembl$Gene.Symbol)
+dup_tradu <- which(dup_tradu == TRUE)
+tradu_entrez_ensembl <- tradu_entrez_ensembl[-dup_tradu, ]
+
+#dup_sfari <- duplicated(sfari_dataframe$ensembl.id)
+#dup_sfari <- which(dup_sfari == TRUE)
+#sfari_dataframe <- sfari_dataframe[-dup_sfari, ]
+
+sfari_temp <- merge(x = sfari_dataframe,
+                    y= tradu_entrez_ensembl, 
+                    by.x = "gene.symbol",
+                    by.y = "Gene.Symbol")
+```
+
+```{r genes incluidos en SFARI}
+# Genes coincidentes en geneList y Sfari
+
+differential_in_sfari <- length(geneList[geneList %in% sfari_temp$Entrez.Gene])
+sampled_genes <- length(geneList)
+
+# Simulate random genes from the array
+#sample from genes in array
+set.seed(2025003003)
+simulation_size <- 100000
+simulation_vector <- c(rep(0, times= simulation_size))
+# Fill the vector
+for (i in 1:simulation_size){
+  sample_from_array <- sample(nondup_probes$Entrez.Gene,
+                            size = sampled_genes,
+                            replace = FALSE)
+  # Genes coincidentes en sample_from_array y SFARI
+  sample_in_sfari <- length(sample_from_array[sample_from_array %in% sfari_temp$Entrez.Gene])
+  simulation_vector[i] <- sample_in_sfari
+}
+
+sfari_quantiles <- quantile(simulation_vector, probs = c(0.005, 0.995))
+```
+
+Los resultados se resumen en el siguiente gráfico:
+```{r histograma simulacion SFARI, fig.cap="Histograma con la distribución de 100 000 simulaciones. Las líneas verticales azules corresponden a los quartiles 0.5% y 99.5%. La línea roja corresponde a la cantidad de genes comunes entre nuestra lista diferencial y la lista de genes SFARI."}
+hist(simulation_vector, breaks=50, freq= FALSE, main = "Histograma de coincidencias simuladas", xlab ="Genes concidentes con la lista SFARI", ylab ="Frecuencia", col = "aliceblue",
+     xlim= c(0, ceiling(max(simulation_vector)/10)*10))
+
+abline(v=differential_in_sfari, col="red")
+abline(v=sfari_quantiles, col="blue")
+```
+
+Media: `r round(mean(simulation_vector))`  
+Desviación típica: `r round(sd(simulation_vector))`  
+Quantil 0.5%: `r sfari_quantiles[[1]]`  
+Quantil 99.5%: `r sfari_quantiles[[2]]`
+
+
+# Resultados
+
+Al comparar los ARN diferencialmente poliadenilados en el estudio, obtenemos un total de 850 genes cuyo patrón de poliadenilación (cola poli-A larga o corta) es diferente en muestras "Control" y muestras "ASD".
+
+Buscando grupos de genes diferencialmente sobrerepresentados en este set de genes, no encontramos ninguno. Ni implicados en procesos biológicos comunes, componentes celulares, ni funciones moleculares.
+
+Sin embargo, al examinar al examinar las coincidencias entre nuestra lista de genes, y la base de datos SFARI de genes relacionados con el ASD, sí encontramos algo interesante. El resultado de la simulación nos sugiere que el puro azar nos proporcionaría de media `r round(mean(simulation_vector))` genes coincidentes entre nuestra muestra y la lista SFARI de genes asociados a ASD. Sin embargo, en el estudio la cantidad de genes coincidentes es de `r differential_in_sfari`, muy por encima del quantil 99.5% (`r sfari_quantiles[[2]]`) de la distribución producida por la simulación. Esto nos hace pensar que es muy poco probable que esa coincidencia de genes entre nuestra lista de genes diferencialmente poliadenilados, y la lista SFARI, sea debida al azar.
+
+# Discusión
+
+Respecto al estudio original del que he podido analizar los datos de expresión, no tengo ningún comentario, tanto el diseño experimental como los métodos y los análisis parecen sólidos.
+
+En cambio, en éste análisis he tenido grandes dudas al realizar la simulación. Especialmente al considerar si la población de genes de la que extraer las muestras debía ser la lista total de genes que el array es capaz de detectar, o sólo el subconjunto de genes que muestran un patrón de poliadenilación diferencial (incluyendo tanto los exclusivos de los grupos "Control" y "ASD" como los comunes). Finalmente me he decantado por la lista total de genes, pero llevado más por la intuición que por un razonamiento estadístico sólido.
+
+# Apéndice A: Código
+
+El documento original en formato .Rmd, que incluye el código completo en lenguaje R usado para generar este informe, se puede consultar y descargar en el siguiente repositorio de Github:
+[jorgevallejo/analisis_GSE113834](https://github.com/jorgevallejo/analisis_GSE113834)
+
+# Apéndice B: Reproducibilidad
+```{r session_info, include=TRUE, echo=TRUE, results='markup'}
+sessionInfo() # For better reproducibility
 ```
 
 # Notas
@@ -764,15 +918,4 @@ save(ego, file="intermediateResults/ego.RData")
 
 [^3]: El criterio para eliminar sondas el análisis ha sido excluir aquellas sondas cuyo rango intercuartílico (IQR) estaba por debajo de la mediana del total de sondas.
 
-# Apéndice A: Reproducibilidad
-```{r session_info, include=TRUE, echo=TRUE, results='markup'}
-sessionInfo() # For better reproducibility
-```
-
-
-
-
-
-
-
-
+# References
