@@ -5,5 +5,5 @@
 
 [directorios]
 data/
-results/
+# results/
 intermediateResults/
