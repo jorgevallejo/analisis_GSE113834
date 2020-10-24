@@ -594,6 +594,11 @@ knitr::kable(anotopTab_INT[1:6, c("Gene.Title", "Gene.Symbol", "logFC", "adj.P.V
      caption = " Comparación 3 (INT): Genes que cambian su expresión de forma significativa por interacción entre la condición del sujeto (CONTROL, ASD) y el material examinado (WASH, ELUTED).")
 ```
 
+#### Enlaces a las listas de genes en formato CSV
+[WvsE.CTRL](https://github.com/jorgevallejo/analisis_GSE113834/blob/master/results/anotopTab_WvsE.CTRL.csv)  
+
+[WvsE.ASD](https://github.com/jorgevallejo/analisis_GSE113834/blob/master/results/anotopTab_WvsE.CTRL.csv)
+
 #### Visualización (volcanoplots)
 
 Para la visualización de estos datos elegimos las gráficas conocidas como volcanoplots. Cada gen está representado por un punto, con los cambios de expresión en el eje de abcisas y los p-valores ajustados en el eje de ordenadas. Se muestra en cada gráfica el nombre de los 5 genes más significativos. La línea roja horizontal corresponde al p-valor = 0.05.

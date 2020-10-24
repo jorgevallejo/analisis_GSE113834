@@ -4,11 +4,11 @@ DONE - GSE README file
 
 DONE - image for the readme file
 
-- pdf links in blue
+DONE - pdf links in blue
 
 - position images
 
-- links to lists of differential genes
+DONE - links to lists of differential genes
 
 - layout mistakes
 
