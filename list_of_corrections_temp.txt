@@ -1,8 +1,8 @@
 - Main README file
 
-- GSE README file
+DONE - GSE README file
 
-- image for the readme file
+DONE - image for the readme file
 
 - pdf links in blue
 

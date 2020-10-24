@@ -9,6 +9,8 @@ output:
   pdf_document:
     latex_engine: xelatex
     toc: true
+urlcolor: blue
+
 # Next code for knitting both types of documents automatically comes from https://stackoverflow.com/questions/39662365/knit-one-markdown-file-to-two-output-files/53280491#53280491
 knit: (function(inputFile, encoding) {
   rmarkdown::render(inputFile, encoding = encoding,
@@ -78,8 +80,8 @@ El conjunto de 27 ficheros CEL (cada uno procedente de una microarray) se puede 
 
 Por combinación de ambas variables podemos dividir las muestras en seis grupos experimentales:  
 
-|Control-Input|ASD-Input|
-|Control-Wash|ASD-Wash|
+|Control-Input|ASD-Input|  
+|Control-Wash|ASD-Wash|  
 |Control-Eluted|ASD-Eluted|
 
 Las muestras "Input" contienen el ARN total. Si comparamos las muestras Control-Input con las muestras ASD-Input, comprobaremos si podemos detectar expresión diferencial entre las condiciones Control y ASD.
