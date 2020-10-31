@@ -1,6 +1,6 @@
 # README to "Análisis de datos de expresión de la serie GSE113834". What is this?
 
-![Principal components analysis from the report](GSE113834_heatmap.png)
+![Principal components analysis from the report](https://github.com/jorgevallejo/analisis_GSE113834/blob/master/GSE113834_PCA.png)
 
 This report is an exercise from the course 'Análisis de Datos Ómicos' in UOC's degree 'Bioinformática y Bioestadística'.
 
