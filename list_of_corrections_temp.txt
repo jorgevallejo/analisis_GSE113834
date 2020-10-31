@@ -1,15 +1,15 @@
 - Main README file
 
-- GSE README file
+DONE - GSE README file
 
-- image for the readme file
+DONE - image for the readme file
 
-- pdf links in blue
+DONE - pdf links in blue
 
-- position images
+DONE - position images
 
-- links to lists of differential genes
+DONE - links to lists of differential genes
 
-- layout mistakes
+DONE - layout mistakes
 
-- ortography mistakes
+DONE - ortography mistakes
