@@ -4,8 +4,8 @@ subtitle: "Análisis Datos Ómicos - PEC 1"
 author: "Jorge Vallejo Ortega"
 date: '`r format(Sys.Date(),"%e de %B, %Y")`'
 output:
- # html_document:
-  #  toc: true
+  html_document:
+    toc: true
   pdf_document:
     latex_engine: xelatex
     toc: true
@@ -41,7 +41,7 @@ knitr::opts_knit$set(stop_on_error = 2L)
 ```
 
 # Sumario
-Se cree que un gen, o una familia de genes, cuya función afecta a la poliadenilación del ARNm podría estar implicado en el riesgo de sufrir el trastorno de espectro autista (ASD). El examen mediante microarray de genes cuyo ARN tiene patrones de poliadenilación diferentes entre muestras de cerebro humano control, y muestras de personas con ASD, apunta a que genes implicados en el riesgo de ASD presentan estos patrones de poliadenilación diferencial con más frecuencia de lo que sería esperado por azar.
+Se cree que un gen, o una familia de genes, cuya función afecta a la poliadenilación del ARNm podría estar implicado en el riesgo de sufrir trastornos del espectro autista (TEA, ó ASD por sus siglas en inglés). El examen mediante microarray de genes cuyo ARN tiene patrones de poliadenilación diferentes entre muestras de cerebro humano control, y muestras de personas con ASD, apunta a que genes implicados en el riesgo de ASD presentan estos patrones de poliadenilación diferencial con más frecuencia de lo que sería esperado por azar.
 
 
 ```{r estructura de directorios}
@@ -72,7 +72,7 @@ Mi objetivo en este análisis es, a partir de los datos de expresión detectados
 # Materiales y métodos
 
 ## Muestras y datos de origen
-El material biológico de partida fueron muestras post-mórtem de córtex prefrontal de pacientes con trastorno del espectro autista (n = 5) y de controles (n = 4), todos ellos varones de 5-23 años de edad. A partir de las muestras de tejido se extrajo el ARN total. De cada muestra de ARN total se guardó una alíquota ("Input"), y el resto se separó por cromatografía en un fracción enriquecida en ARNm con colas poli-A largas ("Wash") y otra enriquecida en ARNm con colas poli-A cortas ("Eluted"). Las muestras de ARN fueron traducidas a ADNc, y este amplificado.
+El material biológico de partida fueron muestras _post mortem_ de córtex prefrontal de pacientes con trastorno del espectro autista (n = 5) y de controles (n = 4), todos ellos varones de 5-23 años de edad. A partir de las muestras de tejido se extrajo el ARN total. De cada muestra de ARN total se guardó una alícuota ("Input"), y el resto se separó por cromatografía en un fracción enriquecida en ARNm con colas poli-A largas ("Wash") y otra enriquecida en ARNm con colas poli-A cortas ("Eluted"). Las muestras de ARN fueron traducidas a ADNc, y este amplificado.
 
 Las muestras de ADNc fueron hibridadas en arrays GeneChip Human PrimeView (Affymetrix, 901838); estos fueron leídos en un GeneChip Scanner GCS3000 (Affymetrix), y mediante Command Console (Affymetrix) los datos se almacenaron en archivos CEL. Estos archivos CEL base del presente análisis, y los datos necesarios para realizar la anotación de los genes destacados, fueron descargados desde la web de Gene Expression Omnibus (GEO) [@clough2016gene].
 
@@ -100,11 +100,11 @@ Las muestras "Wash" están enriquecidas en ARN de cola poli-A corta, y las muest
 
 Los pasos seguidos para realizar el presente análisis han sido los siguientes: 
 
-1. Obtenión de los datos de expresión en bruto.  
+1. Obtención de los datos de expresión en bruto.  
 2. Control de calidad de los datos brutos.  
 3. Normalización.  
 4. Control de calidad de los datos normalizados.  
-5. Filtraje no específico.  
+5. Filtrado no específico.  
 6. Identificación de genes diferencialmente expresados.  
 7. Anotación de los resultados.  
 8. Comparación entre comparaciones.  
@@ -116,7 +116,7 @@ Los datos en bruto usados en el análisis ha sido descargados de Gene Expression
 
 Los datos de expresión han sido descargados de dicho repositorio en forma de ficheros CEL.
 
-La relación entre cada fichero y el grupo experimental al que pertenece se ha extraido de la tabla "Samples", accesible en la misma página web que los ficheros CEL.
+La relación entre cada fichero y el grupo experimental al que pertenece se ha extraído de la tabla "Samples", accesible en la misma página web que los ficheros CEL.
 
 Los datos de anotación correspondientes al modelo de array usado, están catalogados en el repositorio GEO bajo el código de acceso [GPL15207](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GPL15207). Dichos datos han sido descargados en forma de fichero de texto, y usados para anotar los datos obtenidos de las sondas de las arrays.
 
@@ -207,7 +207,7 @@ Los diferentes archivos con los datos en bruto han sido manipulados utilizando R
 ### Control de calidad de los datos en bruto
 Con el control de calidad pretendemos averiguar si los datos de alguna de las muestras presentan defectos o sesgos que desaconsejen usarlos, antes de continuar con el análisis.
 
-En este caso hemos usado examinado los datos de expresión mediante diferenes representaciones gráficas, en busca de anomalías.
+En este caso hemos usado examinado los datos de expresión mediante diferentes representaciones gráficas, en busca de anomalías.
 
 ```{r re-used variables}
 # Labels for each sample
@@ -365,7 +365,7 @@ A simple vista no se observa ningún gran defecto como roturas, burbujas o manch
 
 ### Normalización de los datos
 
-Antes de empezar el análisis de expresión es necesario procesar los datos brutos de forma que los datos de las diferentes muestras (micorarrays) sean comparables. El proceso de normalización intenta asegurarse de que las diferencias de intensidad reflejen la expresión diferencial de los genes, eliminando sesgos producidos por razones técnicas.
+Antes de empezar el análisis de expresión es necesario procesar los datos brutos de forma que los datos de las diferentes muestras (microrarrays) sean comparables. El proceso de normalización intenta asegurarse de que las diferencias de intensidad reflejen la expresión diferencial de los genes, eliminando sesgos producidos por razones técnicas.
 
 El método de normalización que hemos usado en este análisis es el método RMA (_robust multi-array average_), que es uno de los más usados en el ecosistema de Bioconductor.
 
@@ -416,11 +416,11 @@ Ahora el primer componente es responsable del 37% de la variabilidad total. Casi
 
 La variabilidad explicada por la componente secundaria es el 16%, y también parece depender del material; separando claramente "INPUT" de los otros dos materiales ("ELUTED" y "WASH"). El grupo sin embargo - "CTRL" frente a "ASD" -, no parece tener una gran influencia en la variabilidad.
 
-Un cambio notable en el diagrama de componentes es prinpales es la posición de la muestra "CTRL-1 INPUT", que ya no aparece separada del resto como sí ocurría al utilizar los datos brutos.
+Un cambio notable en el diagrama de componentes es principales es la posición de la muestra "CTRL-1 INPUT", que ya no aparece separada del resto como sí ocurría al utilizar los datos brutos.
 
 En conclusión, podríamos decir que la normalización de los datos ha producido el efecto esperado y no encontramos impedimento para proceder al análisis de los datos.
 
-### Filtraje no específico
+### Filtrado no específico
 
 Antes del análisis estadístico, para eliminar ruido y mejorar la sensibilidad, hemos eliminado datos procedentes de sondas que no aportan información o que pueden aportar información duplicada o confuso.
 
@@ -508,7 +508,7 @@ nondup_probes <- nondup_probes[-multGenes, ]
 
 
 ```{r filtraje por IQR}
-# Elimina las sondas cuyo rango interquantil (IQR) sea menor a la mediana
+# Elimina las sondas cuyo rango intercuantil (IQR) sea menor a la mediana
 # de todos los IQR.
 median_IQR <- median(nondup_probes$IQR)
 filtered_probes <- nondup_probes[nondup_probes$IQR > median_IQR, ]
@@ -675,7 +675,7 @@ res <- decideTests(fit.main, method="separate", adjust.method="fdr", p.value=0.1
 # This table can be annotated and saved as a csv file, for example
 ```
 
-Podemos hacer primero una comparación cuantitativa entre las comparaciónes; cuántos genes diferenciales son exclusivos de una de las comparaciones y cuántos son comunes.
+Podemos hacer primero una comparación cuantitativa entre las comparaciones; cuántos genes diferenciales son exclusivos de una de las comparaciones y cuántos son comunes.
 
 Resumen de los resultados:
 ```{r resumen comparaciones multiples}
@@ -833,7 +833,7 @@ Para un valor de corte del p-valor de 0.05, y valor de corte del q-valor de 0.2;
 
 #### Gene Set Enrichment Analysis
 
-Este tipo de análisis está especializado en detectar situaciones en las que las diferencias de expresión son pequeñas, pero coordinadas para un grupo de genes relacionados. En este informe hemos utilizado la función _gseGO_ del paquete _cluseterProfiler_ para realizar este análisis.
+Este tipo de análisis está especializado en detectar situaciones en las que las diferencias de expresión son pequeñas, pero coordinadas para un grupo de genes relacionados. En este informe hemos utilizado la función _gseGO_ del paquete _clusterProfiler_ para realizar este análisis.
 ```{r Gene Set Enrichment Analysis}
 interfile <- "intermediateResults/ego2_3.RData"
 
@@ -876,7 +876,7 @@ download.file(url= sfari_url, destfile = "data/sfari.csv", method = 'curl')
 
 [SFARI Gene](https://gene.sfari.org/) es una base de datos al servicio de la investigación del autismo, centrada en genes implicados en susceptibilidad a dicho síndrome[@sfari2019human]. Parte de la información que integra está compuesta por el módulo Human Gene, un set de datos que recopila centenares de genes humanos potencialmente relacionados con el ASD.  
 
-Como un último intento de investigar la significatividad biológica de nuestra lista de genes diferencialmente poliadenilados entre los grupos "Control" y "ASD", hemos comparado dicha lista con la lista de genes en el módula Human Gene de SFARI y extraído los genes que aparecen en ambas listas. Posteriormente, mediante simulaciones, hemos comprobado la probabilidad de obtener esa misma cantidad de genes muestreando al azar la lista total de genes que pueden detectarse con el modelo de array usado en el estudio.
+Como un último intento de investigar la significatividad biológica de nuestra lista de genes diferencialmente poliadenilados entre los grupos "Control" y "ASD", hemos comparado dicha lista con la lista de genes en el módulo Human Gene de SFARI y extraído los genes que aparecen en ambas listas. Posteriormente, mediante simulaciones, hemos comprobado la probabilidad de obtener esa misma cantidad de genes muestreando al azar la lista total de genes que pueden detectarse con el modelo de array usado en el estudio.
 
 El proceso de simulación ha consistido en, primeramente, extraer el mismo número de genes (`r length(geneList)`) que aparecen en nuestra lista de genes diferencialmente poliadenilados de entre la lista de genes que pueden ser detectados mediante el array (`r format(length(nondup_probes$Entrez.Gene), big.mark= " ")`. Después se ha comparado la lista aleatoria resultante con la lista de genes SFARI para averiguar la cantidad de genes en común. El proceso se ha repetido 100 000 veces.
 
@@ -949,7 +949,7 @@ if(file.exists(interfile)){
 }else{
   pdf(file = interfile)
   hist(simulation_vector, breaks=50, freq= FALSE, main = "Histograma de coincidencias simuladas", 
-       xlab ="Genes concidentes con la lista SFARI", ylab ="Frecuencia", col = "aliceblue",
+       xlab ="Genes coincidentes con la lista SFARI", ylab ="Frecuencia", col = "aliceblue",
        xlim= c(0, ceiling(max(simulation_vector)/10)*10))
   
   abline(v=differential_in_sfari, col="red")
@@ -964,17 +964,17 @@ if(file.exists(interfile)){
 \raggedright
 Media: `r round(mean(simulation_vector))`  
 Desviación típica: `r round(sd(simulation_vector))`  
-Quantil 0.5%: `r sfari_quantiles[[1]]`  
-Quantil 99.5%: `r sfari_quantiles[[2]]`
+Cuantil 0.5%: `r sfari_quantiles[[1]]`  
+Cuantil 99.5%: `r sfari_quantiles[[2]]`
 
 
 # Resultados
 
 Al comparar los ARN diferencialmente poliadenilados en el estudio, obtenemos un total de 850 genes cuyo patrón de poliadenilación (cola poli-A larga o corta) es diferente en muestras "Control" y muestras "ASD".
 
-Buscando grupos de genes diferencialmente sobrerepresentados en este set de genes, no encontramos ninguno. Ni implicados en procesos biológicos comunes, componentes celulares, ni funciones moleculares.
+Buscando grupos de genes diferencialmente sobrerrepresentados en este set de genes, no encontramos ninguno. Ni implicados en procesos biológicos comunes, componentes celulares, ni funciones moleculares.
 
-Sin embargo, al examinar al examinar las coincidencias entre nuestra lista de genes, y la base de datos SFARI de genes relacionados con el ASD, sí encontramos algo interesante. El resultado de la simulación nos sugiere que el puro azar nos proporcionaría de media `r round(mean(simulation_vector))` genes coincidentes entre nuestra muestra y la lista SFARI de genes asociados a ASD. Sin embargo, en el estudio la cantidad de genes coincidentes es de `r differential_in_sfari`, muy por encima del quantil 99.5% (`r sfari_quantiles[[2]]`) de la distribución producida por la simulación. Esto nos hace pensar que es muy poco probable que esa coincidencia de genes entre nuestra lista de genes diferencialmente poliadenilados, y la lista SFARI, sea debida al azar.
+Sin embargo, al examinar al examinar las coincidencias entre nuestra lista de genes, y la base de datos SFARI de genes relacionados con el ASD, sí encontramos algo interesante. El resultado de la simulación nos sugiere que el puro azar nos proporcionaría de media `r round(mean(simulation_vector))` genes coincidentes entre nuestra muestra y la lista SFARI de genes asociados a ASD. Sin embargo, en el estudio la cantidad de genes coincidentes es de `r differential_in_sfari`, muy por encima del cuantil 99.5% (`r sfari_quantiles[[2]]`) de la distribución producida por la simulación. Esto nos hace pensar que es muy poco probable que esa coincidencia de genes entre nuestra lista de genes diferencialmente poliadenilados, y la lista SFARI, sea debida al azar.
 
 # Discusión
 

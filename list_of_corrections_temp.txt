@@ -12,4 +12,4 @@ DONE - links to lists of differential genes
 
 DONE - layout mistakes
 
-- ortography mistakes
+DONE - ortography mistakes
