@@ -6,10 +6,10 @@ DONE - image for the readme file
 
 DONE - pdf links in blue
 
-- position images
+DONE - position images
 
 DONE - links to lists of differential genes
 
-- layout mistakes
+DONE - layout mistakes
 
 - ortography mistakes
